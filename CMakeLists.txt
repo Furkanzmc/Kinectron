@@ -1,61 +1,63 @@
 project(KinectUtils)
 cmake_minimum_required(VERSION 2.8)
 
+include(FindKinectSDK2.cmake)
 set(KINECT_UTILS_VERSION 1.0)
-message("Using Utilities v" ${KINECT_UTILS_VERSION})
+message("Using KinectUtils v" ${KINECT_UTILS_VERSION})
 
-if(KINECT_ENABLED)
+include_directories(${KinectSDK2_INCLUDE_DIRS})
+message("123123123 -> " ${KinectSDK2_INCLUDE_DIRS})
+
+if(KinectSDK2_FOUND)
   set(KINTECT_UTILS_SRC
-    Backend/KinectUtils/KinectHandler.cpp
-    Backend/KinectUtils/GePoTool.cpp
-    Backend/KinectUtils/SkeletonSmoother.cpp
-    Backend/SnapshotTaker.cpp
+    KinectHandler.cpp
+    GePoTool.cpp
+    SkeletonSmoother.cpp
   )
 
   list(APPEND KINTECT_UTILS_HEADERS
-    Backend/KinectUtils/KinectHandler.h
-    Backend/KinectUtils/GePoTool.h
-    Backend/KinectUtils/GestureDetectorBase.h
-    Backend/KinectUtils/SkeletonSmoother.h
-    Backend/SnapshotTaker.h
+    KinectHandler.h
+    GePoTool.h
+    GestureDetectorBase.h
+    SkeletonSmoother.h
   )
 
 #Append Gesture Detectors
   list(APPEND KINTECT_UTILS_SRC
-    Backend/KinectUtils/LeanDetector.cpp
-    Backend/KinectUtils/KickDetector.cpp
-    Backend/KinectUtils/PunchDetector.cpp
-    Backend/KinectUtils/JumpDetector.cpp
-    Backend/KinectUtils/SwipeDetector.cpp
-    Backend/KinectUtils/ArmWaveDetector.cpp
-    Backend/KinectUtils/BrushDetector.cpp
-    Backend/KinectUtils/HandZoomDetector.cpp
-    Backend/KinectUtils/OpenArmDetector.cpp
-    Backend/KinectUtils/HandUpDetector.cpp
-    Backend/KinectUtils/TomDetector.cpp
-    Backend/KinectUtils/SquatDetector.cpp
+    LeanDetector.cpp
+    KickDetector.cpp
+    PunchDetector.cpp
+    JumpDetector.cpp
+    SwipeDetector.cpp
+    ArmWaveDetector.cpp
+    BrushDetector.cpp
+    HandZoomDetector.cpp
+    OpenArmDetector.cpp
+    HandUpDetector.cpp
+    TomDetector.cpp
+    SquatDetector.cpp
   )
 
   list(APPEND KINTECT_UTILS_HEADERS
-    Backend/KinectUtils/LeanDetector.h
-    Backend/KinectUtils/KickDetector.h
-    Backend/KinectUtils/PunchDetector.h
-    Backend/KinectUtils/JumpDetector.h
-    Backend/KinectUtils/SwipeDetector.h
-    Backend/KinectUtils/ArmWaveDetector.h
-    Backend/KinectUtils/BrushDetector.h
-    Backend/KinectUtils/HandZoomDetector.h
-    Backend/KinectUtils/OpenArmDetector.h
-    Backend/KinectUtils/HandUpDetector.h
-    Backend/KinectUtils/TomDetector.h
-    Backend/KinectUtils/SquatDetector.h
+    LeanDetector.h
+    KickDetector.h
+    PunchDetector.h
+    JumpDetector.h
+    SwipeDetector.h
+    ArmWaveDetector.h
+    BrushDetector.h
+    HandZoomDetector.h
+    OpenArmDetector.h
+    HandUpDetector.h
+    TomDetector.h
+    SquatDetector.h
   )
 else()
   message("Kinect is not enabled.")
-endif(KINECT_ENABLED)
+endif(KinectSDK2_FOUND)
 
 add_library(kinect_utils STATIC
-  ${KINTECT_UTILS_HEADERS}
+  ${KINTECT_UTILS_SRC}
 )
 
 set_target_properties(kinect_utils
