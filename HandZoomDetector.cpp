@@ -1,10 +1,9 @@
 #include "HandZoomDetector.h"
 #include "GePoTool.h"
-#include "Toolbox.h"
 
 UID HandZoomHelper::detectHandZoom(GePoTool &postureTool, IBody *body, const ZOOM_TYPE &zoomType, HandZoomInfo &zoomInfo, const float &delta, const UID &uid)
 {
-    if (!body || Toolbox::enumToIntegerValue(zoomType) > Toolbox::enumToIntegerValue(ZOOM_TYPE::ZOOM_OUT)) {
+    if (!body || static_cast<int>(zoomType) > static_cast<int>(ZOOM_TYPE::ZOOM_OUT)) {
         return GePoTool::INVALID_UID;
     }
 
@@ -78,7 +77,7 @@ UID HandZoomHelper::detectHandZoom(GePoTool &postureTool, IBody *body, const ZOO
 UID HandZoomHelper::detectHandPinchZoom(GePoTool &postureTool, IBody *body, const ZOOM_TYPE &zoomType, PinchZoomInfo &zoomInfo, const float &delta,
                                         const UID &uid)
 {
-    if (!body || Toolbox::enumToIntegerValue(zoomType) <= Toolbox::enumToIntegerValue(ZOOM_TYPE::ZOOM_OUT)) {
+    if (!body || static_cast<int>(zoomType) <= static_cast<int>(ZOOM_TYPE::ZOOM_OUT)) {
         return GePoTool::INVALID_UID;
     }
 
