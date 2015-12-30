@@ -6,7 +6,6 @@ set(KINECT_UTILS_VERSION 1.0)
 message("Using KinectUtils v" ${KINECT_UTILS_VERSION})
 
 include_directories(${KinectSDK2_INCLUDE_DIRS})
-message("123123123 -> " ${KinectSDK2_INCLUDE_DIRS})
 
 if(KinectSDK2_FOUND)
   set(KINTECT_UTILS_SRC
