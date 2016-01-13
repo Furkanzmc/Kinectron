@@ -10,6 +10,7 @@ KinectHandler::KinectHandler()
     , m_isBackgroundRemovedDataAvailable(false)
     , m_isBackgroundRemovalEnabled(false)
     , m_CanTakeSnapshot(false)
+    , m_IsSensorClosed(false)
     , m_SnapshotFilePath("")
     , m_Sensor(nullptr)
     , m_MultiSourceFrameReader(nullptr)
@@ -117,6 +118,8 @@ bool KinectHandler::isKinectAvailable()
 
 HRESULT KinectHandler::closeSensor()
 {
+    std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+    m_IsSensorClosed = true;
     return m_Sensor->Close();
 }
 
@@ -145,7 +148,6 @@ double KinectHandler::getDistanceFromFloor(const CameraSpacePoint &jointPosition
 {
     //If floor isn't visible, can't get the distance
     if (!isFloorVisible()) {
-        std::cout << "FLOOR NOT VISIBLE!!!!\n";
         return -1;
     }
     double distanceFromFloor = 0;
@@ -196,7 +198,7 @@ void KinectHandler::updateSensor()
 {
     std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
     std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
-    while (true) {
+    while (m_IsSensorClosed == false) {
         std::lock_guard<std::recursive_mutex> lock(m_Mutex);
         //Kinect does not support more than 30 frames per second, so don't update more than that.
         now = std::chrono::high_resolution_clock::now();

@@ -60,6 +60,11 @@ public:
      */
     HRESULT initializeDefaultSensor(const unsigned int &initeType);
     bool isKinectAvailable();
+
+    /**
+     * @brief Closes the sensor and stops the update thread.
+     * @return
+     */
     HRESULT closeSensor();
 
     /**
@@ -109,7 +114,8 @@ private:
     bool m_isColorDataAvailable,//This is set to true when the Kinect color processing is done
          m_isBackgroundRemovedDataAvailable,//This is set to true when the Kinect processing is done
          m_isBackgroundRemovalEnabled,//If this is set to false, processCoordinateMapping() method will not be called.
-         m_CanTakeSnapshot;
+         m_CanTakeSnapshot,
+         m_IsSensorClosed;
     std::string m_SnapshotFilePath;
 
     IKinectSensor *m_Sensor;
