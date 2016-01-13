@@ -13,6 +13,7 @@ GePoTool::GePoTool(const unsigned int &sensorIniteType)
 
 GePoTool::~GePoTool()
 {
+    m_KinectHandler.closeSensor();
 }
 
 void GePoTool::processBody(const std::array<IBody *, BODY_COUNT> &bodyArray, UINT64 sensorTime)
