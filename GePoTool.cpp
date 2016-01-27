@@ -241,7 +241,7 @@ PointF GePoTool::getLeanAmount(IBody *body) const
 float GePoTool::getAngleBetweenHands(IBody *body) const
 {
     if (!body || isBodyTracked(body) == false) {
-        return INVALID_ANGLE;
+        return static_cast<float>(INVALID_ANGLE);
     }
 
     Joint joints[JointType_Count];
@@ -259,16 +259,16 @@ float GePoTool::getAngleBetweenHands(IBody *body) const
      * should also be over or on the elbow.
      */
     if (leftHand.Y > rightHand.Y && leftElbow.Y > leftHand.Y) {
-        return INVALID_ANGLE;
+        return static_cast<float>(INVALID_ANGLE);
     }
     if (rightHand.Y > leftHand.Y && rightElbow.Y > rightHand.Y) {
-        return INVALID_ANGLE;
+        return static_cast<float>(INVALID_ANGLE);
     }
     if (rightHand.X < rightShoulder.X) {
-        return INVALID_ANGLE;
+        return static_cast<float>(INVALID_ANGLE);
     }
     if (leftHand.X > leftShoulder.X) {
-        return INVALID_ANGLE;
+        return static_cast<float>(INVALID_ANGLE);
     }
 
     //x -> Distance on x axis, y -> distance on y axis, h -> hypotenuse
