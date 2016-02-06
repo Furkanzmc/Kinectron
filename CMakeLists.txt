@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 
 include(FindKinectSDK2.cmake)
 set(KINECT_UTILS_VERSION 1.0)
-message("Using KinectUtils v" ${KINECT_UTILS_VERSION})
+message("NOTICE [KinectUtils]: Using KinectUtils v" ${KINECT_UTILS_VERSION})
 
 include_directories(${KinectSDK2_INCLUDE_DIRS})
 
@@ -52,7 +52,7 @@ if(KinectSDK2_FOUND)
     SquatDetector.h
   )
 else()
-  message("Kinect is not enabled.")
+    message("ERROR [KinectUtils]: Kinect SDK cannot be found so it is not enabled.")
 endif(KinectSDK2_FOUND)
 
 add_library(kinect_utils STATIC
