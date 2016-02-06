@@ -29,7 +29,7 @@ if(WIN32)
             message("ERROR [KinectUtils]: Kinect ${AR} library dir cannot be found")
         endif()
         if(EXISTS $ENV{KINECTSDK20_DIR}/lib/${AR}/Kinect20.lib)
-            set(KinectSDK2_LIBRARIES $ENV{KINECTSDK20_DIR}/lib/${AR}/Kinect20.lib CACHE PATH "Kinect v2 library path" FORCE)
+            set(KINECT_LIB $ENV{KINECTSDK20_DIR}/lib/${AR}/Kinect20.lib CACHE PATH "Kinect v2 library path" FORCE)
         else()
             message("ERROR [KinectUtils]: Kinect ${AR} library file cannot be found")
         endif()
@@ -103,9 +103,4 @@ set_target_properties(kinect_utils
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-)
-
-set(KINECT_UTILS_LIBS
-    kinect_utils
-    ${KinectSDK2_LIBRARIES}
 )
