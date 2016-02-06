@@ -358,76 +358,62 @@ GePoTool::BodyRect GePoTool::getBodyRect(IBody *body)
         return BodyRect();
     }
 
-    const int HEAD = 0, HAND_RIGHT = 1, HAND_LEFT = 2, FOOT_RIGHT = 3, FOOT_LEFT = 4, SHOULDER_RIGHT = 5, SHOULDER_LEFT = 6, ELBOW_LEFT = 7, ELBOW_RIGHT = 8;
+    const int headIndex = 0,
+              handRightIndex = 1,
+              handLeftIndex = 2,
+              footRightIndex = 3,
+              footLeftIndex = 4,
+              shoulderRightIndex = 5,
+              shoulderLeftIndex = 6;
+
     Joint joints[JointType_Count];
     HRESULT hr = body->GetJoints(_countof(joints), joints);
     if (SUCCEEDED(hr)) {
-        ColorSpacePoint colorPoints[9] = {0};
-        CameraSpacePoint cameraPoints[9] = {0};
-        //TODO: Prevent the left and right from being smaller than shoulders
-        //TODO: Get the distance between shoulder mid and head, add that distance to the rect
-        //FIXME
-        //This is mapped for 1920x1080 resolution
-        cameraPoints[HEAD] = joints[JointType_Head].Position;
-        cameraPoints[HAND_RIGHT] = joints[JointType_HandRight].Position;
-        cameraPoints[HAND_LEFT] = joints[JointType_HandLeft].Position;
-        cameraPoints[FOOT_RIGHT] = joints[JointType_FootRight].Position;
-        cameraPoints[FOOT_LEFT] = joints[JointType_FootLeft].Position;
-        cameraPoints[SHOULDER_RIGHT] = joints[JointType_ShoulderRight].Position;
-        cameraPoints[SHOULDER_LEFT] = joints[JointType_ShoulderLeft].Position;
-        cameraPoints[ELBOW_LEFT] = joints[JointType_ElbowLeft].Position;
-        cameraPoints[ELBOW_RIGHT] = joints[JointType_ElbowLeft].Position;
+        ColorSpacePoint colorPoints[7] = {0};
+        CameraSpacePoint cameraPoints[7] = {0};
 
+        cameraPoints[headIndex] = joints[JointType_Head].Position;
+        cameraPoints[handRightIndex] = joints[JointType_HandRight].Position;
+        cameraPoints[handLeftIndex] = joints[JointType_HandLeft].Position;
+        cameraPoints[footRightIndex] = joints[JointType_FootRight].Position;
+        cameraPoints[footLeftIndex] = joints[JointType_FootLeft].Position;
+        cameraPoints[shoulderRightIndex] = joints[JointType_ShoulderRight].Position;
+        cameraPoints[shoulderLeftIndex] = joints[JointType_ShoulderLeft].Position;
+
+        //This is mapped for 1920x1080 resolution
         hr = m_KinectHandler.getCoordinateMapper()->MapCameraPointsToColorSpace(_countof(cameraPoints), cameraPoints, _countof(colorPoints), colorPoints);
         if (SUCCEEDED(hr)) {
-            colorPoints[HEAD].Y -= 100;
-            colorPoints[HAND_RIGHT].X += 50;
-            colorPoints[HAND_LEFT].X -= 50;
-            colorPoints[FOOT_RIGHT].X += 50;
-            colorPoints[FOOT_LEFT].X -= 50;
-            //            colorPoints[FOOT_LEFT].Y += 50;
-            colorPoints[SHOULDER_RIGHT].X += 50;
-            colorPoints[SHOULDER_LEFT].X -= 50;
-            colorPoints[ELBOW_LEFT].X -= 50;
-            colorPoints[ELBOW_RIGHT].Y += 50;
-            const float shoulderLenght = std::abs(colorPoints[SHOULDER_LEFT].X - colorPoints[SHOULDER_RIGHT].X) + 50;
+            const float shoulderLenght = std::abs(colorPoints[shoulderLeftIndex].X - colorPoints[shoulderRightIndex].X) * 1.2f;
+            const float margin = shoulderLenght * .3f;
 
             BodyRect rect;
-            rect.x = colorPoints[HAND_LEFT].X;
-            rect.y = colorPoints[HEAD].Y;
-            rect.width = std::abs(colorPoints[HAND_LEFT].X - colorPoints[HAND_RIGHT].X);
-            rect.height = std::abs(colorPoints[HEAD].Y - colorPoints[FOOT_LEFT].Y);
-            //If the hands get closer, take the shoulder as lenght as the rect width
-            if (rect.width < shoulderLenght) {
-                rect.width = shoulderLenght;
-            }
-            //If the legs are wider than the shoulder or hands distance
-            if (rect.width < std::abs(colorPoints[FOOT_LEFT].X - colorPoints[FOOT_RIGHT].X)) {
-                rect.width = std::abs(colorPoints[FOOT_LEFT].X - colorPoints[FOOT_RIGHT].X);
-            }
-            //If the left hand goes to the right side of the shoulder, take the shoulder as rect.x
-            if (rect.x > colorPoints[SHOULDER_LEFT].X) {
-                rect.x = colorPoints[SHOULDER_LEFT].X - 50;
-            }
-            //If the left foot goes beyond left hand or left shoulder
-            if (colorPoints[FOOT_LEFT].X < rect.x) {
-                rect.x = colorPoints[FOOT_LEFT].X;
-            }
-            //If the right foot goes beyond right hand or right shoulder
-            if (colorPoints[FOOT_RIGHT].X > colorPoints[SHOULDER_RIGHT].X || colorPoints[FOOT_RIGHT].X > colorPoints[SHOULDER_RIGHT].X) {
-                rect.x = colorPoints[FOOT_LEFT].X;
-            }
-            //If the right hand go above the head
-            if (rect.y > colorPoints[HAND_RIGHT].Y) {
-                rect.y = colorPoints[HAND_RIGHT].Y;
-            }
-            //If the left hand go above the head
-            if (rect.y > colorPoints[HAND_LEFT].Y) {
-                rect.y = colorPoints[HAND_LEFT].Y;
-            }
-            //If the head position is below zero, make it 0
+            rect.x = min(colorPoints[handLeftIndex].X, colorPoints[footLeftIndex].X) - margin;
+            rect.y = colorPoints[headIndex].Y - shoulderLenght * .6f;
+
+            const float xToRightHandLength = std::abs(rect.x - (colorPoints[handRightIndex].X));
+            const float xToRightFootLength = std::abs(rect.x - (colorPoints[footRightIndex].X));
+            const float maxWidthIndex = max(shoulderLenght, max(xToRightHandLength, xToRightFootLength));
+
+            const float yToRightFootLength = std::abs(rect.y - (colorPoints[footRightIndex].Y));
+            const float yToLeftFootLength = std::abs(rect.y - (colorPoints[footLeftIndex].Y));
+            const float maxHeight = max(yToRightFootLength, yToLeftFootLength);
+
+            rect.width = maxWidthIndex + margin;
+            rect.height = maxHeight + margin;
+
+            //Contain the rect within the color size
             if (rect.y < 0) {
-                rect.y = 0;
+                rect.y = 1;
+            }
+            else if (rect.y > KinectHandler::COLOR_HEIGHT) {
+                rect.y = KinectHandler::COLOR_WIDTH;
+            }
+
+            if (rect.x > KinectHandler::COLOR_WIDTH) {
+                rect.x = KinectHandler::COLOR_WIDTH;
+            }
+            else if (rect.x < 0) {
+                rect.x = 1;
             }
             return rect;
         }

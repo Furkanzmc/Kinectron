@@ -129,11 +129,17 @@ public:
     unsigned int getDetectedBodyCount() const;
 
     /**
-     * @brief [WIP]
+     * @brief Returns a bounding box whose origin is on the top left corner.
      * @param body
      * @return
      */
     BodyRect getBodyRect(IBody *body);
+
+    /**
+     * @brief Returns a bounding box whose origin is on the top left corner.
+     * @param body
+     * @return
+     */
     BodyRect getHeadRect(IBody *body);
 
     float toDegree(const float &radian) const;
