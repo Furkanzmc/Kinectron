@@ -33,21 +33,21 @@ void GePoTool::bodyNotificitons(const std::array<IBody *, BODY_COUNT> &bodyArray
     const unsigned int newBodyCount = std::count_if(bodyArray.begin(), bodyArray.end(), countVisible);
 
     if (newBodyCount == 0) {
-        if (m_BodyLostFunc) {
-            m_BodyLostFunc(PLAYER::ONE);
-            m_BodyLostFunc(PLAYER::TWO);
-            m_BodyLostFunc(PLAYER::THREE);
-            m_BodyLostFunc(PLAYER::FOUR);
-            m_BodyLostFunc(PLAYER::FIVE);
-            m_BodyLostFunc(PLAYER::SIX);
+        if (onBodyLost) {
+            onBodyLost(PLAYER::ONE);
+            onBodyLost(PLAYER::TWO);
+            onBodyLost(PLAYER::THREE);
+            onBodyLost(PLAYER::FOUR);
+            onBodyLost(PLAYER::FIVE);
+            onBodyLost(PLAYER::SIX);
         }
         return;
     }
     //If the m_Bodies is empty, copy the new vector and call the body found functions
     else if (previousBodyCount == 0) {
         for (unsigned int i = 0; i < newBodyCount; i++) {
-            if (m_BodyFoundFunc) {
-                m_BodyFoundFunc(i);
+            if (onBodyFound) {
+                onBodyFound(i);
             }
         }
         return;
@@ -55,8 +55,8 @@ void GePoTool::bodyNotificitons(const std::array<IBody *, BODY_COUNT> &bodyArray
     //If there are already items, and new bodyCount is bigger than the m_Bodies then new players joined.
     else if (newBodyCount > previousBodyCount) {
         for (unsigned int i = previousBodyCount - 1; i < newBodyCount; i++) {
-            if (m_BodyFoundFunc) {
-                m_BodyFoundFunc(i);
+            if (onBodyFound) {
+                onBodyFound(i);
             }
         }
     }
@@ -82,8 +82,8 @@ void GePoTool::bodyNotificitons(const std::array<IBody *, BODY_COUNT> &bodyArray
             }
             //If the body does not exist, it can only mean one thing... INFIDEL!!!
             if (isBodyAlreadyExist == false) {
-                if (m_BodyLostFunc) {
-                    m_BodyLostFunc(oldBodyIndex);
+                if (onBodyLost) {
+                    onBodyLost(oldBodyIndex);
                 }
             }
         }
@@ -561,6 +561,6 @@ IBody *GePoTool::getClosestBody()
 
 void GePoTool::resetBodyNotification()
 {
-    m_BodyLostFunc = std::bind([](const BodyIndex & player) {}, std::placeholders::_1);
-    m_BodyFoundFunc = std::bind([](const BodyIndex & player) {}, std::placeholders::_1);
+    onBodyLost = std::bind([](const BodyIndex & player) {}, std::placeholders::_1);
+    onBodyFound = std::bind([](const BodyIndex & player) {}, std::placeholders::_1);
 }

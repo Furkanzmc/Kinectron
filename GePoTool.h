@@ -6,7 +6,7 @@
 class GePoTool
 {
 public:
-    std::function<void(const BodyIndex &)> m_BodyLostFunc, m_BodyFoundFunc;
+    std::function<void(const BodyIndex &)> onBodyLost, onBodyFound;
     const static int INVALID_ANGLE = -720;
     const static UID INVALID_UID = 0;
 
