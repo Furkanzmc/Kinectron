@@ -37,7 +37,15 @@ if(WIN32)
 else()
 endif()
 
-include_directories(${KinectSDK2_INCLUDE_DIRS})
+get_filename_component(KINECT_UTILS_ROOT "./" ABSOLUTE)
+
+set(KINECT_UTILS_INC
+    ${KINECT_UTILS_ROOT}
+    ${KinectSDK2_INCLUDE_DIRS}
+    ${KINECT_UTILS_ROOT}/Detectors
+    CACHE LIST "Set the list of include paths for KinectUtils")
+
+include_directories(${KINECT_UTILS_INC})
 
 if(KINECT_ENABLED)
   set(KINTECT_UTILS_SRC
@@ -49,39 +57,39 @@ if(KINECT_ENABLED)
   list(APPEND KINTECT_UTILS_HEADERS
     KinectHandler.h
     GePoTool.h
-    GestureDetectorBase.h
+    Detectors/GestureDetectorBase.h
     SkeletonSmoother.h
   )
 
 #Append Gesture Detectors
   list(APPEND KINTECT_UTILS_SRC
-    LeanDetector.cpp
-    KickDetector.cpp
-    PunchDetector.cpp
-    JumpDetector.cpp
-    SwipeDetector.cpp
-    ArmWaveDetector.cpp
-    BrushDetector.cpp
-    HandZoomDetector.cpp
-    OpenArmDetector.cpp
-    HandUpDetector.cpp
-    TomDetector.cpp
-    SquatDetector.cpp
+    Detectors/LeanDetector.cpp
+    Detectors/KickDetector.cpp
+    Detectors/PunchDetector.cpp
+    Detectors/JumpDetector.cpp
+    Detectors/SwipeDetector.cpp
+    Detectors/ArmWaveDetector.cpp
+    Detectors/BrushDetector.cpp
+    Detectors/HandZoomDetector.cpp
+    Detectors/OpenArmDetector.cpp
+    Detectors/HandUpDetector.cpp
+    Detectors/TomDetector.cpp
+    Detectors/SquatDetector.cpp
   )
 
   list(APPEND KINTECT_UTILS_HEADERS
-    LeanDetector.h
-    KickDetector.h
-    PunchDetector.h
-    JumpDetector.h
-    SwipeDetector.h
-    ArmWaveDetector.h
-    BrushDetector.h
-    HandZoomDetector.h
-    OpenArmDetector.h
-    HandUpDetector.h
-    TomDetector.h
-    SquatDetector.h
+    Detectors/LeanDetector.h
+    Detectors/KickDetector.h
+    Detectors/PunchDetector.h
+    Detectors/JumpDetector.h
+    Detectors/SwipeDetector.h
+    Detectors/ArmWaveDetector.h
+    Detectors/BrushDetector.h
+    Detectors/HandZoomDetector.h
+    Detectors/OpenArmDetector.h
+    Detectors/HandUpDetector.h
+    Detectors/TomDetector.h
+    Detectors/SquatDetector.h
   )
 else()
     message("ERROR [KinectUtils]: Kinect SDK cannot be found so it is not enabled.")
@@ -97,3 +105,7 @@ set_target_properties(kinect_utils
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
 
+set(KINECT_UTILS_LIBS
+    kinect_utils
+    ${KinectSDK2_LIBRARIES}
+)
