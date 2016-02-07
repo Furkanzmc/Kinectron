@@ -163,7 +163,7 @@ public:
     IBody *getClosestBody();
 
     /**
-     * @brief Use this to disconnect any function from m_BodyFoundFunc and m_BodyLostFunc
+     * @brief Use this to disconnect any function from onBodyFound and onBodyLost
      */
     void resetBodyNotification();
 
