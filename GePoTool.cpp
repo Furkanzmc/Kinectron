@@ -388,7 +388,7 @@ GePoTool::BodyRect GePoTool::getBodyRect(IBody *body)
 
             BodyRect rect;
             rect.x = min(colorPoints[handLeftIndex].X, colorPoints[footLeftIndex].X) - margin;
-            rect.y = colorPoints[headIndex].Y - shoulderLenght * .6f;
+            rect.y = min(min(colorPoints[headIndex].Y, colorPoints[handRightIndex].Y), colorPoints[handLeftIndex].Y) - shoulderLenght * .6f;
 
             const float xToRightHandLength = std::abs(rect.x - (colorPoints[handRightIndex].X));
             const float xToRightFootLength = std::abs(rect.x - (colorPoints[footRightIndex].X));
