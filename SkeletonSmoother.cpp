@@ -1,18 +1,49 @@
 #include "SkeletonSmoother.h"
+#include "GePoTool.h"
 
 SkeletonSmoother::SkeletonSmoother(ICoordinateMapper *coordinateMapper)
     : m_CoordinateMapper(coordinateMapper)
+    , m_PostureTool(nullptr)
     , m_SmoothScale(1.f)
 {
-    m_PositionScale.X = 1.f;
-    m_PositionScale.Y = 1.f;
+    setupSmoother();
+}
 
-    std::fill(m_JointPositions.at(0).begin(), m_JointPositions.at(0).end(), JointProp());
-    std::fill(m_JointPositions.at(1).begin(), m_JointPositions.at(1).end(), JointProp());
-    std::fill(m_JointPositions.at(2).begin(), m_JointPositions.at(2).end(), JointProp());
-    std::fill(m_JointPositions.at(3).begin(), m_JointPositions.at(3).end(), JointProp());
-    std::fill(m_JointPositions.at(4).begin(), m_JointPositions.at(4).end(), JointProp());
-    std::fill(m_JointPositions.at(5).begin(), m_JointPositions.at(5).end(), JointProp());
+SkeletonSmoother::SkeletonSmoother(GePoTool *postureTool)
+    : m_PostureTool(postureTool)
+    , m_CoordinateMapper(nullptr)
+    , m_SmoothScale(1.f)
+{
+    if (postureTool) {
+        m_CoordinateMapper = m_PostureTool->getKinectHandler().getCoordinateMapper();
+    }
+
+    setupSmoother();
+}
+
+void SkeletonSmoother::update(const float &delta)
+{
+    if (!m_PostureTool) {
+        std::cerr << "WARNING: " << __FUNCTION__ << ": m_PostureTool is nullptr. Try using SkeletonSmoother::updateJointPositions.\n";
+        return;
+    }
+
+    for (int bodyIndex = 0; bodyIndex < BODY_COUNT; bodyIndex++) {
+        IBody *body = m_PostureTool->getBody(bodyIndex);
+        if (!body) {
+            reset(bodyIndex);
+            return;
+        }
+
+        Joint joints[JointType_Count];
+        HRESULT hr = body->GetJoints(_countof(joints), joints);
+        if (SUCCEEDED(hr)) {
+            updateJointPositions(bodyIndex, delta, joints);
+        }
+        else {
+            reset(bodyIndex);
+        }
+    }
 }
 
 void SkeletonSmoother::updateJointPositions(const unsigned int &bodyIndex, const float &delta, Joint *joints)
@@ -100,6 +131,19 @@ bool SkeletonSmoother::isJointDrew(unsigned int bodyIndex, JointType jointType) 
     return m_JointPositions.at(bodyIndex).at(jointType).isDraw;
 }
 
+void SkeletonSmoother::setupSmoother()
+{
+    m_PositionScale.X = 1.f;
+    m_PositionScale.Y = 1.f;
+
+    std::fill(m_JointPositions.at(0).begin(), m_JointPositions.at(0).end(), JointProp());
+    std::fill(m_JointPositions.at(1).begin(), m_JointPositions.at(1).end(), JointProp());
+    std::fill(m_JointPositions.at(2).begin(), m_JointPositions.at(2).end(), JointProp());
+    std::fill(m_JointPositions.at(3).begin(), m_JointPositions.at(3).end(), JointProp());
+    std::fill(m_JointPositions.at(4).begin(), m_JointPositions.at(4).end(), JointProp());
+    std::fill(m_JointPositions.at(5).begin(), m_JointPositions.at(5).end(), JointProp());
+}
+
 PointF SkeletonSmoother::mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint)
 {
     // Calculate the body's position on the screen
@@ -115,12 +159,12 @@ PointF SkeletonSmoother::mapBodyPointToScreenPoint(const CameraSpacePoint &bodyP
     return screenPos;
 }
 
-bool SkeletonSmoother::pointEquals(const PointF &p1, const PointF &p2)
+bool SkeletonSmoother::pointEquals(const PointF &p1, const PointF &p2) const
 {
     return (p1.X == p2.X) && (p1.Y == p2.Y);
 }
 
-PointF SkeletonSmoother::pointZero()
+PointF SkeletonSmoother::pointZero() const
 {
     PointF p = {0, 0};
     return p;

@@ -2,6 +2,7 @@
 #define SKELETONSMOOTHER_H
 #include <Kinect.h>
 #include <array>
+class GePoTool;
 
 class SkeletonSmoother
 {
@@ -60,12 +61,15 @@ public:
     typedef std::array<JointProp, JointType_Count> JointArray;
 
 public:
-    SkeletonSmoother(ICoordinateMapper *coordinateMapper);
+    explicit SkeletonSmoother(ICoordinateMapper *coordinateMapper);
+    explicit SkeletonSmoother(GePoTool *postureTool);
+
+    void update(const float &delta);
     void updateJointPositions(const unsigned int &bodyIndex, const float &delta, Joint *joints);
     void reset(const unsigned int &bodyIndex);
 
     /**
-     * @brief The lower the value is the smoother
+     * @brief The lower the value the smoother the positions
      * @param scale
      */
     void setSmoothScale(float scale);
@@ -81,15 +85,18 @@ public:
     bool isJointDrew(unsigned int bodyIndex, JointType jointType) const;
 
 private:
+    GePoTool *m_PostureTool;
     ICoordinateMapper *m_CoordinateMapper;
     float m_SmoothScale;
     PointF m_PositionScale;
     std::array<std::array<JointProp, JointType_Count>, BODY_COUNT> m_JointPositions;
 
 private:
+    void setupSmoother();
+
     PointF mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint);
-    bool pointEquals(const PointF &p1, const PointF &p2);
-    PointF pointZero();
+    inline bool pointEquals(const PointF &p1, const PointF &p2) const;
+    inline PointF pointZero() const;
 
 };
 
