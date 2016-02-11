@@ -545,6 +545,21 @@ IBody *GePoTool::getClosestBody()
     return m_Bodies[index];
 }
 
+bool GePoTool::isBodyRestricted(IBody *body) const
+{
+    if (!body) {
+        return false;
+    }
+
+    BOOLEAN isRestricted = 0;
+    HRESULT hr = body->get_IsRestricted(&isRestricted);
+    if (SUCCEEDED(hr)) {
+        return isRestricted == 1;
+    }
+
+    return false;
+}
+
 void GePoTool::resetBodyNotification()
 {
     onBodyLost = std::bind([](const BodyIndex & player) {}, std::placeholders::_1);

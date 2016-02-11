@@ -167,6 +167,13 @@ public:
      */
     void resetBodyNotification();
 
+    /**
+     * @brief Retrieves a boolean value that indicates if the body is restricted from a full range of motion.
+     * @param body
+     * @return
+     */
+    bool isBodyRestricted(IBody *body) const;
+
     template<class Point3D>
     float getDistanceBetweenPoints(const Point3D &pointOne, const Point3D &pointTwo)
     {
