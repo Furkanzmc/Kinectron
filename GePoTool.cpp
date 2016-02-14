@@ -404,13 +404,13 @@ GePoTool::BodyRect GePoTool::getBodyRect(IBody *body)
 
             const float xToRightHandLength = std::abs(rect.x - (colorPoints[handRightIndex].X));
             const float xToRightFootLength = std::abs(rect.x - (colorPoints[footRightIndex].X));
-            const float maxWidthIndex = max(shoulderLenght, max(xToRightHandLength, xToRightFootLength));
+            const float maxWidth = max(shoulderLenght, max(xToRightHandLength, xToRightFootLength));
 
             const float yToRightFootLength = std::abs(rect.y - (colorPoints[footRightIndex].Y));
             const float yToLeftFootLength = std::abs(rect.y - (colorPoints[footLeftIndex].Y));
             const float maxHeight = max(yToRightFootLength, yToLeftFootLength);
 
-            rect.width = maxWidthIndex + margin;
+            rect.width = maxWidth + margin;
             rect.height = maxHeight + margin;
 
             //Contain the rect within the color size
