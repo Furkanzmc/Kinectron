@@ -293,15 +293,19 @@ float GePoTool::getAngleBetweenHands(IBody *body) const
 std::vector<UID> GePoTool::pollGestures(const BodyIndex &bodyIndex, const float &delta)
 {
     std::vector<UID> detectedGestures;
+    IBody *body = getBody(bodyIndex);
+    if (!body) {
+        return detectedGestures;
+    }
+
+    if (isBodyRestricted(body)) {
+        return detectedGestures;
+    }
+
     for (auto detector : m_Detectors) {
         if (detector) {
             //If the detector already is set to a body index, and the given body inex does not eqaul to it skip the detector.
             if (detector->getBodyIndex() > DGestureBase::INVALID_BODY_INDEX && detector->getBodyIndex() != bodyIndex) {
-                continue;
-            }
-
-            IBody *body = getBody(bodyIndex);
-            if (!body) {
                 continue;
             }
 
@@ -320,16 +324,20 @@ std::vector<UID> GePoTool::pollGestures(const BodyIndex &bodyIndex, const float 
 
 UID GePoTool::determinePlayerPosture(const BodyIndex &bodyIndex, const float &delta)
 {
+    IBody *body = getBody(bodyIndex);
+    if (!body) {
+        return GePoTool::INVALID_UID;
+    }
+
+    if (isBodyRestricted(body)) {
+        return GePoTool::INVALID_UID;
+    }
+
     UID detectedGesture = GePoTool::INVALID_UID;
     for (auto detector : m_Detectors) {
         if (detector) {
             //If the detector already is set to a body index, and the given body inex does not eqaul to it skip the detector.
             if (detector->getBodyIndex() > DGestureBase::INVALID_BODY_INDEX && detector->getBodyIndex() != bodyIndex) {
-                continue;
-            }
-
-            IBody *body = getBody(bodyIndex);
-            if (!body) {
                 continue;
             }
 
@@ -355,6 +363,10 @@ unsigned int GePoTool::getDetectedBodyCount() const
 GePoTool::BodyRect GePoTool::getBodyRect(IBody *body)
 {
     if (!body) {
+        return BodyRect();
+    }
+
+    if (isBodyRestricted(body)) {
         return BodyRect();
     }
 
@@ -424,6 +436,10 @@ GePoTool::BodyRect GePoTool::getBodyRect(IBody *body)
 GePoTool::BodyRect GePoTool::getHeadRect(IBody *body)
 {
     if (!body) {
+        return BodyRect();
+    }
+
+    if (isBodyRestricted(body)) {
         return BodyRect();
     }
 

@@ -107,7 +107,7 @@ public:
      * If the detector has a custom ID that is equal to/above GestureDetectorBase::CUSTOM_ID_START_VALUE, it stores the custom ID.
      * This way, you can attach custom IDs other than the unique one to match your gestures with other things.
      * Every GestureDetectorBase has a BodyIndex variable and its initial value is GestureDetectorBase::CUSTOM_ID_START_VALUE, which equals to -1.
-     * If BodyIndex of the detector has a higher value, that is used for the body fetching.
+     * If BodyIndex of the detector has a higher value, that is used for the body fetching. If the given body is restricted, no gesture recognition is done.
      * @param body
      * @param delta
      * @return Returns detected gesutre IDs sorted in ascending order
@@ -116,6 +116,7 @@ public:
 
     /**
      * @brief This does the same as above function but breaks at the first sight of a gesture instead of polling it.
+     * If the given body is restricted, no gesture recognition is done.
      * @param bodyIndex
      * @param delta
      * @return
