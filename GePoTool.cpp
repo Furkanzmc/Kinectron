@@ -396,10 +396,9 @@ GePoTool::BodyRect GePoTool::getBodyRect(IBody *body)
         hr = m_KinectHandler.getCoordinateMapper()->MapCameraPointsToColorSpace(_countof(cameraPoints), cameraPoints, _countof(colorPoints), colorPoints);
         if (SUCCEEDED(hr)) {
             const float shoulderLenght = std::abs(colorPoints[shoulderLeftIndex].X - colorPoints[shoulderRightIndex].X) * 1.2f;
-            const float margin = shoulderLenght * .3f;
 
             BodyRect rect;
-            rect.x = min(colorPoints[handLeftIndex].X, colorPoints[footLeftIndex].X) - margin;
+            rect.x = min(colorPoints[handLeftIndex].X, colorPoints[footLeftIndex].X);
             rect.y = min(min(colorPoints[headIndex].Y, colorPoints[handRightIndex].Y), colorPoints[handLeftIndex].Y) - shoulderLenght * .6f;
 
             const float xToRightHandLength = std::abs(rect.x - (colorPoints[handRightIndex].X));
@@ -410,8 +409,8 @@ GePoTool::BodyRect GePoTool::getBodyRect(IBody *body)
             const float yToLeftFootLength = std::abs(rect.y - (colorPoints[footLeftIndex].Y));
             const float maxHeight = max(yToRightFootLength, yToLeftFootLength);
 
-            rect.width = maxWidth + margin;
-            rect.height = maxHeight + margin;
+            rect.width = maxWidth;
+            rect.height = maxHeight;
 
             //Contain the rect within the color size
             if (rect.y < 0) {
