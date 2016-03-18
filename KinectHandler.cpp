@@ -7,8 +7,6 @@
 
 KinectHandler::KinectHandler()
     : m_isColorDataAvailable(false)
-    , m_isBackgroundRemovedDataAvailable(false)
-    , m_isBackgroundRemovalEnabled(false)
     , m_CanTakeSnapshot(false)
     , m_IsSensorClosed(false)
     , m_SnapshotFilePath("")
@@ -21,8 +19,6 @@ KinectHandler::KinectHandler()
     , m_BodyFrame(nullptr)
     , m_CoordinateMapper(nullptr)
     , m_DepthCoordinates(nullptr)
-    , m_OutputRGBX(nullptr)
-    , m_BackgroundRGBX(nullptr)
     , m_ColorRGBX(nullptr)
     , m_InitType(FrameSourceTypes_None)
     , m_FrameArrivedHandle(NULL)
@@ -30,12 +26,6 @@ KinectHandler::KinectHandler()
     , m_ClosestBodyOffset(-1.f)
     , m_DesiredBodyCount(BODY_COUNT)
 {
-    // create heap storage for composite image pixel data in RGBX format
-    m_OutputRGBX = new RGBQUAD[COLOR_WIDTH * COLOR_HEIGHT];
-
-    // create heap storage for background image pixel data in RGBX format
-    m_BackgroundRGBX = new RGBQUAD[COLOR_WIDTH * COLOR_HEIGHT];
-
     // create heap storage for color pixel data in RGBX format
     m_ColorRGBX = new RGBQUAD[COLOR_WIDTH * COLOR_HEIGHT];
 
@@ -56,14 +46,6 @@ KinectHandler::~KinectHandler()
         m_ThreadScreenshot.join();
     }
 
-    if (m_OutputRGBX) {
-        delete[] m_OutputRGBX;
-        m_OutputRGBX = nullptr;
-    }
-    if (m_BackgroundRGBX) {
-        delete[] m_BackgroundRGBX;
-        m_BackgroundRGBX = nullptr;
-    }
     if (m_ColorRGBX) {
         delete[] m_ColorRGBX;
         m_ColorRGBX = nullptr;
@@ -169,29 +151,9 @@ const unsigned char *KinectHandler::getColorData() const
     return reinterpret_cast<unsigned char *>(m_ColorRGBX);;
 }
 
-const unsigned char *KinectHandler::getBackgroundRemovedData() const
-{
-    return reinterpret_cast<unsigned char *>(m_OutputRGBX);
-}
-
 bool KinectHandler::isColorDataAvailable() const
 {
     return m_isColorDataAvailable;
-}
-
-bool KinectHandler::isBackgroundRemovedDataAvailable() const
-{
-    return m_isBackgroundRemovedDataAvailable && m_BackgroundRGBX != nullptr;
-}
-
-void KinectHandler::setBackgroundRemovalEnabled(const bool &isEnabled)
-{
-    m_isBackgroundRemovalEnabled = isEnabled;
-}
-
-bool KinectHandler::isBackgroundRemovalEnabled() const
-{
-    return m_isBackgroundRemovalEnabled;
 }
 
 void KinectHandler::updateSensor()
@@ -269,64 +231,12 @@ void KinectHandler::updateSensor()
             updateBodyFrame(m_BodyFrame);
             updateColorFrameData(m_ColorFrameInfo, m_ColorFrame);
             updateDepthFrameData(m_DepthInfo, m_DepthFrame);
-            hr = updateBodyIndexFrameData(m_BodyIndexInfo, m_BodyIndexFrame);
-            if (SUCCEEDED(hr)) {
-                if (isBackgroundRemovalEnabled() && (m_ColorFrame && m_DepthFrame && m_BodyIndexFrame)) {
-                    extractPlayerFromBackground();
-                }
-            }
+            updateBodyIndexFrameData(m_BodyIndexInfo, m_BodyIndexFrame);
 
             //Release the frame descriptions
             safeRelease(m_DepthInfo.depthFrameDescription);
             safeRelease(m_ColorFrameInfo.colorFrameDescription);
             safeRelease(m_BodyIndexInfo.bodyIndexFrameDescription);
-        }
-    }
-}
-
-void KinectHandler::extractPlayerFromBackground()
-{
-    std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-    if (!m_ColorFrame || !m_DepthFrame || !m_BodyIndexFrame) {
-        return;
-    }
-
-    m_isBackgroundRemovedDataAvailable = false;
-    const bool isDepthAvailable = m_DepthInfo.depthBuffer && m_DepthInfo.depthWidth == DEPTH_WIDTH && m_DepthInfo.depthHeight == DEPTH_HEIGHT;
-    const bool isColorAvailable = m_ColorFrameInfo.colorBuffer && m_ColorFrameInfo.colorWidth == COLOR_WIDTH && m_ColorFrameInfo.colorHeight == COLOR_HEIGHT;
-    const bool isBodyIndexAvailable = m_BodyIndexInfo.bodyIndexBuffer && m_BodyIndexInfo.bodyIndexWidth == DEPTH_WIDTH
-                                      && m_BodyIndexInfo.bodyIndexHeight == DEPTH_HEIGHT;
-    // Make sure we've received valid data
-    if (m_CoordinateMapper && m_DepthCoordinates && m_OutputRGBX && isDepthAvailable && isColorAvailable && isBodyIndexAvailable) {
-        HRESULT hr = m_CoordinateMapper->MapColorFrameToDepthSpace(m_DepthInfo.depthWidth * m_DepthInfo.depthHeight, m_DepthInfo.depthBuffer,
-                     m_ColorFrameInfo.colorWidth * m_ColorFrameInfo.colorHeight, m_DepthCoordinates);
-
-        if (SUCCEEDED(hr)) {
-            // loop over output pixels
-            for (int colorIndex = 0; colorIndex < (m_ColorFrameInfo.colorWidth * m_ColorFrameInfo.colorHeight); ++colorIndex) {
-                //Default setting source to copy from the background pixel
-                const RGBQUAD *pSrc = m_BackgroundRGBX + 0;
-                DepthSpacePoint p = m_DepthCoordinates[colorIndex];
-
-                //Values that are negative infinity means it is an invalid color to depth mapping so we skip processing for this pixel
-                if (p.X != -std::numeric_limits<float>::infinity() && p.Y != -std::numeric_limits<float>::infinity()) {
-                    const int depthX = static_cast<int>(p.X + 0.5f);
-                    const int depthY = static_cast<int>(p.Y + 0.5f);
-
-                    if ((depthX >= 0 && depthX < m_DepthInfo.depthWidth) && (depthY >= 0 && depthY < m_DepthInfo.depthHeight)) {
-                        UINT8 player = m_BodyIndexInfo.bodyIndexBuffer[depthX + (depthY * DEPTH_WIDTH)];
-
-                        //If we're tracking a player for the current pixel, draw from the color camera
-                        if (player != 0xff) {
-                            //Set source for copy to the color pixel
-                            pSrc = m_ColorRGBX + colorIndex;
-                        }
-                    }
-                }
-                //Write output
-                m_OutputRGBX[colorIndex] = *pSrc;
-            }
-            m_isBackgroundRemovedDataAvailable = true;
         }
     }
 }

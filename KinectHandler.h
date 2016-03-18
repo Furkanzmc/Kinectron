@@ -80,12 +80,7 @@ public:
     ICoordinateMapper *getCoordinateMapper() const;
 
     const unsigned char *getColorData() const;
-    const unsigned char *getBackgroundRemovedData() const;
     bool isColorDataAvailable() const;
-    bool isBackgroundRemovedDataAvailable() const;
-
-    void setBackgroundRemovalEnabled(const bool &isEnabled);
-    bool isBackgroundRemovalEnabled() const;
 
     PointF mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint);
 
@@ -112,8 +107,6 @@ public:
 
 private:
     bool m_isColorDataAvailable,//This is set to true when the Kinect color processing is done
-         m_isBackgroundRemovedDataAvailable,//This is set to true when the Kinect processing is done
-         m_isBackgroundRemovalEnabled,//If this is set to false, processCoordinateMapping() method will not be called.
          m_CanTakeSnapshot,
          m_IsSensorClosed;
     std::string m_SnapshotFilePath;
@@ -128,11 +121,6 @@ private:
     ICoordinateMapper *m_CoordinateMapper;
     DepthSpacePoint *m_DepthCoordinates;
 
-    /**
-     * @brief This is the output from mapping the color image to depth image and removing the background. So this only has the player images in color.
-     */
-    RGBQUAD *m_OutputRGBX;
-    RGBQUAD *m_BackgroundRGBX;
     RGBQUAD *m_ColorRGBX;
 
     FrameSourceTypes m_InitType;
@@ -221,12 +209,6 @@ private:
      * @brief Updates the sensor 30 times per second.
      */
     void updateSensor();
-
-    /**
-     * @brief This method uses Color, Depth and BodyIndex sources to remove the background and leave the players. When the extraction is done
-     * m_isBackgroundRemovedDataAvailable is set to true.
-     */
-    void extractPlayerFromBackground();
 
     /**
      * @brief Sorts the bodies from left to right and then feeds them to m_ProcessBodyFunc
