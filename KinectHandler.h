@@ -42,12 +42,16 @@ public:
     std::function<void(const std::array<IBody *, BODY_COUNT>&, UINT64)> m_ProcessBodyFunc;
     std::function<void()> m_ResetBodyFunc;
 
-    static const unsigned int BITS_PER_PIXEL = sizeof(RGBQUAD) * 8;
+    static const unsigned int BITS_PER_PIXEL_COLOR = sizeof(RGBQUAD) * 8;
+
     static const unsigned int COLOR_WIDTH = 1920;
     static const unsigned int COLOR_HEIGHT = 1080;
-    static const unsigned int DATA_LENGTH = COLOR_WIDTH * COLOR_HEIGHT * (BITS_PER_PIXEL / 8);
+    static const unsigned int DATA_LENGTH_COLOR = COLOR_WIDTH * COLOR_HEIGHT * (BITS_PER_PIXEL_COLOR / 8);
+
+    static const unsigned int BITS_PER_PIXEL_DEPTH = sizeof(RGBTRIPLE) * 8;
     static const unsigned int DEPTH_WIDTH = 512;
     static const unsigned int DEPTH_HEIGHT = 424;
+    static const unsigned int DATA_LENGTH_DEPTH = DEPTH_WIDTH * DEPTH_HEIGHT * (BITS_PER_PIXEL_DEPTH / 8);
 
 public:
     KinectHandler();
@@ -82,6 +86,9 @@ public:
     const unsigned char *getColorData() const;
     bool isColorDataAvailable() const;
 
+    const unsigned short *getDepthData() const;
+    bool isDepthDataAvailable() const;
+
     PointF mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint);
 
     const UINT64 &getClosestBodyID() const;
@@ -107,6 +114,7 @@ public:
 
 private:
     bool m_isColorDataAvailable,//This is set to true when the Kinect color processing is done
+         m_isDepthDataAvailable,//This is set to true when the Kinect depth processing is done
          m_CanTakeSnapshot,
          m_IsSensorClosed;
     std::string m_SnapshotFilePath;
@@ -153,14 +161,21 @@ private:
                 delete[] depthBuffer;
                 depthBuffer = nullptr;
             }
+
+            if (depthBufferRGBX) {
+                delete[] depthBufferRGBX;
+                depthBufferRGBX = nullptr;
+            }
         }
 
         INT64 depthTime = 0;
         IFrameDescription *depthFrameDescription = nullptr;
         int depthWidth = 0;
         int depthHeight = 0;
+        USHORT minReliableDistance = 0, maxReliableDistance = 0;
         UINT depthBufferSize = 0;
         UINT16 *depthBuffer = nullptr;
+        RGBTRIPLE *depthBufferRGBX = nullptr;
     };
 
     struct ColorFrameInfo {

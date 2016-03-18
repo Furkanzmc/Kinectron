@@ -7,6 +7,7 @@
 
 KinectHandler::KinectHandler()
     : m_isColorDataAvailable(false)
+    , m_isDepthDataAvailable(false)
     , m_CanTakeSnapshot(false)
     , m_IsSensorClosed(false)
     , m_SnapshotFilePath("")
@@ -151,6 +152,16 @@ bool KinectHandler::isColorDataAvailable() const
     return m_isColorDataAvailable;
 }
 
+const unsigned short *KinectHandler::getDepthData() const
+{
+    return reinterpret_cast<unsigned short *>(m_DepthInfo.depthBufferRGBX);
+}
+
+bool KinectHandler::isDepthDataAvailable() const
+{
+    return m_isDepthDataAvailable;
+}
+
 void KinectHandler::updateSensor()
 {
     std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
@@ -166,6 +177,7 @@ void KinectHandler::updateSensor()
         start = std::chrono::high_resolution_clock::now();
 
         m_isColorDataAvailable = false;
+        m_isDepthDataAvailable = false;
         //Safe release the frames before we can use them again
         safeRelease(m_DepthFrame);
         safeRelease(m_ColorFrame);
@@ -408,8 +420,50 @@ HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFra
         hr = depthInfo.depthFrameDescription->get_Height(&depthInfo.depthHeight);
     }
     if (SUCCEEDED(hr)) {
+        hr = depthFrame->get_DepthMinReliableDistance(&depthInfo.minReliableDistance);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = depthFrame->get_DepthMaxReliableDistance(&depthInfo.maxReliableDistance);
+    }
+    if (SUCCEEDED(hr)) {
         hr = depthFrame->AccessUnderlyingBuffer(&depthInfo.depthBufferSize, &depthInfo.depthBuffer);
     }
+
+    //Process the depth image
+    if (SUCCEEDED(hr) && depthInfo.depthBuffer != nullptr && depthInfo.depthWidth == DEPTH_WIDTH && depthInfo.depthHeight == DEPTH_HEIGHT) {
+        if (depthInfo.depthBufferRGBX == nullptr) {
+            depthInfo.depthBufferRGBX = new RGBTRIPLE[DEPTH_WIDTH * DEPTH_HEIGHT];
+        }
+
+        RGBTRIPLE *rgb = depthInfo.depthBufferRGBX;
+        UINT16 *buffer = depthInfo.depthBuffer;
+
+        //End pixel is start + width * height - 1
+        const UINT16 *pBufferEnd = buffer + (depthInfo.depthWidth * depthInfo.depthHeight);
+
+        while (buffer < pBufferEnd) {
+            USHORT depth = *buffer;
+
+            //To convert to a byte, we're discarding the most-significant
+            //rather than least-significant bits.
+            //We're preserving detail, although the intensity will "wrap".
+            //Values outside the reliable depth range are mapped to 0 (black).
+
+            //Note: Using conditionals in this loop could degrade performance.
+            //Consider using a lookup table instead when writing production code.
+            BYTE intensity = static_cast<BYTE>((depth >= depthInfo.minReliableDistance) && (depth <= depthInfo.maxReliableDistance) ? (depth % 256) : 0);
+
+            rgb->rgbtRed   = intensity;
+            rgb->rgbtGreen = intensity;
+            rgb->rgbtBlue  = intensity;
+
+            ++rgb;
+            ++buffer;
+        }
+
+        m_isDepthDataAvailable = true;
+    }
+
     return hr;
 }
 
@@ -447,8 +501,8 @@ HRESULT KinectHandler::updateColorFrameData(ColorFrameInfo &colorFrameInfo, ICol
                 if (m_ThreadScreenshot.joinable()) {
                     m_ThreadScreenshot.join();
                 }
-                m_ThreadScreenshot = std::thread(m_TakeScreenshotFunc, reinterpret_cast<unsigned char *>(colorFrameInfo.colorBuffer), DATA_LENGTH, COLOR_WIDTH, COLOR_HEIGHT,
-                                                 BITS_PER_PIXEL, m_SnapshotFilePath);
+                m_ThreadScreenshot = std::thread(m_TakeScreenshotFunc, reinterpret_cast<unsigned char *>(colorFrameInfo.colorBuffer), DATA_LENGTH_COLOR, COLOR_WIDTH, COLOR_HEIGHT,
+                                                 BITS_PER_PIXEL_COLOR, m_SnapshotFilePath);
                 m_CanTakeSnapshot = false;
             }
         }
