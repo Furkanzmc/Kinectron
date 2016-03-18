@@ -1,27 +1,6 @@
 #ifndef KINECTHANDLER_H
 #define KINECTHANDLER_H
-//Windows Includes
-#include <Windows.h>
-#include <strsafe.h>
-#include <Shlobj.h>
-#include <Objbase.h>
-#pragma comment(lib, "shell32.lib")
-#pragma comment(lib, "Ole32.lib")
-
-//Kinect Includes
-#include "Kinect.h"
-
-//STD includes
-#include <functional>
-#include <thread>
-#include <mutex>
-#include <vector>
-#include <array>
-
-/**
- * The index from 0 to 5 each corresponding to a skeleton. Player 0 is the left-most player, and player 5 is the right most player
- */
-using BodyIndex = unsigned int;
+#include "KinectUtilTypes.h"
 
 class KinectHandler
 {
@@ -57,6 +36,11 @@ public:
     static const unsigned int BODY_INDEX_WIDTH = DEPTH_WIDTH;
     static const unsigned int BODY_INDEX_HEIGHT = DEPTH_HEIGHT;
     static const unsigned int DATA_LENGTH_BODY_INDEX = DATA_LENGTH_DEPTH;
+
+    static const unsigned int BITS_PER_PIXEL_IR = BITS_PER_PIXEL_DEPTH;
+    static const unsigned int IR_WIDTH = DEPTH_WIDTH;
+    static const unsigned int IR_HEIGHT = DEPTH_HEIGHT;
+    static const unsigned int DATA_LENGTH_IR = DATA_LENGTH_DEPTH;
 
 public:
     KinectHandler();
@@ -97,6 +81,9 @@ public:
     const unsigned short *getBodyIndexData() const;
     bool isBodyIndexDataAvailable() const;
 
+    const unsigned short *getIRData() const;
+    bool isIRDataAvailable() const;
+
     PointF mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint);
 
     const UINT64 &getClosestBodyID() const;
@@ -108,35 +95,45 @@ public:
     void setClosestBodyOffset(const float &offset);
     const float &getClosestBodyOffset() const;
 
-    template<class Interface>
-    static inline void safeRelease(Interface *&interfaceToRelease)
-    {
-        if (interfaceToRelease != nullptr) {
-            interfaceToRelease->Release();
-            interfaceToRelease = nullptr;
-        }
-    }
-
     unsigned int getDesiredBodyCount() const;
     void setDesiredBodyCount(unsigned int desiredBodyCount);
 
+    void setIRSourceValueMax(float maxVal);
+    float getIRSourceValueMax() const;
+
+    void setIROutputValueMin(float minVal);
+    float getIROutputValueMin() const;
+
+    void setIROutputValueMax(float maxVal);
+    float getIROutputValueMax() const;
+
+    void setIRSceneValueAvg(float avgVal);
+    float getIRSceneValueAvg() const;
+
+    void setIRSceneStandartDeviations(float deviation);
+    float getIRSceneStandartDeviations() const;
+
 private:
-    bool m_isColorDataAvailable,//This is set to true when the Kinect color processing is done
-         m_isDepthDataAvailable,//This is set to true when the Kinect depth processing is done
-         m_isBodyIndexDataAvailable,//This is set to true when the Kinect body index processing is done
+    bool m_isColorDataAvailable,// This is set to true when the Kinect color processing is done
+         m_isDepthDataAvailable,// This is set to true when the Kinect depth processing is done
+         m_isBodyIndexDataAvailable,// This is set to true when the Kinect body index processing is done
+         m_isIRDataAvailable,// This is set to true when the Kinect infrred processing is done
          m_CanTakeSnapshot,
          m_IsSensorClosed;
+
     std::string m_SnapshotFilePath;
 
     IKinectSensor *m_Sensor;
     IMultiSourceFrameReader *m_MultiSourceFrameReader;
     IMultiSourceFrame *m_MultiSourceFrame;
+
     IDepthFrame *m_DepthFrame;
     IColorFrame *m_ColorFrame;
     IBodyIndexFrame *m_BodyIndexFrame;
     IBodyFrame *m_BodyFrame;
+    IInfraredFrame *m_IRFrame;
+
     ICoordinateMapper *m_CoordinateMapper;
-    DepthSpacePoint *m_DepthCoordinates;
 
     FrameSourceTypes m_InitType;
     Vector4 m_FloorClipPlane;
@@ -162,71 +159,10 @@ private:
      */
     unsigned int m_DesiredBodyCount;
 
-    struct DepthFrameInfo {
-        ~DepthFrameInfo()
-        {
-            safeRelease(frameDescription);
-            if (buffer) {
-                delete[] buffer;
-                buffer = nullptr;
-            }
-
-            if (bufferRGB) {
-                delete[] bufferRGB;
-                bufferRGB = nullptr;
-            }
-        }
-
-        INT64 depthTime = 0;
-        IFrameDescription *frameDescription = nullptr;
-        int width = 0;
-        int height = 0;
-        USHORT minReliableDistance = 0, maxReliableDistance = 0;
-        UINT bufferSize = 0;
-        UINT16 *buffer = nullptr;
-        RGBTRIPLE *bufferRGB = nullptr;
-    };
-
-    struct ColorFrameInfo {
-        ~ColorFrameInfo()
-        {
-            safeRelease(frameDescription);
-            if (bufferRGBX) {
-                delete[] bufferRGBX;
-                bufferRGBX = nullptr;
-            }
-        }
-
-        IFrameDescription *frameDescription = nullptr;
-        int width = 0;
-        int height = 0;
-        ColorImageFormat imageFormat = ColorImageFormat_None;
-        UINT bufferSize = 0;
-        RGBQUAD *bufferRGBX = nullptr;
-    };
-
-    struct BodyIndexInfo {
-        ~BodyIndexInfo()
-        {
-            safeRelease(frameDescription);
-            if (buffer) {
-                delete[] buffer;
-                buffer = nullptr;
-            }
-        }
-
-        INT64 bodyIndexTime = 0;
-        IFrameDescription *frameDescription = nullptr;
-        int width = 0;
-        int height = 0;
-        UINT bufferSize = 0;
-        UINT8 *buffer = nullptr;
-        RGBTRIPLE *bufferRGB = nullptr;
-    };
-
     DepthFrameInfo m_DepthInfo;
     ColorFrameInfo m_ColorFrameInfo;
     BodyIndexInfo m_BodyIndexInfo;
+    IRFrameInfo m_IRInfo;
 
 private:
     /**
@@ -247,6 +183,7 @@ private:
     HRESULT updateColorFrameData(ColorFrameInfo &colorFrameInfo, IColorFrame *colorFrame);
     HRESULT updateBodyIndexFrameData(BodyIndexInfo &bodyIndexInfo, IBodyIndexFrame *bodyIndexFrame);
     HRESULT updateBodyFrame(IBodyFrame *bodyFrame);
+    HRESULT updateIRFrameData(IRFrameInfo &irFrameInfo, IInfraredFrame *irFrame);
 };
 
 #endif // KINECTHANDLER_H
