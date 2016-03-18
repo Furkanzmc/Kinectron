@@ -546,9 +546,9 @@ HRESULT KinectHandler::updateBodyIndexFrameData(BodyIndexInfo &bodyIndexInfo, IB
     }
 
     //Process body index
-    if (SUCCEEDED(hr) && bodyIndexInfo.buffer != nullptr && bodyIndexInfo.width == DEPTH_WIDTH && bodyIndexInfo.height == DEPTH_HEIGHT) {
+    if (SUCCEEDED(hr) && bodyIndexInfo.buffer != nullptr && bodyIndexInfo.width == BODY_INDEX_WIDTH && bodyIndexInfo.height == BODY_INDEX_HEIGHT) {
         if (bodyIndexInfo.bufferRGB == nullptr) {
-            bodyIndexInfo.bufferRGB = new RGBTRIPLE[DEPTH_WIDTH * DEPTH_HEIGHT];
+            bodyIndexInfo.bufferRGB = new RGBTRIPLE[BODY_INDEX_WIDTH * BODY_INDEX_HEIGHT];
         }
 
         RGBTRIPLE *rgb = bodyIndexInfo.bufferRGB;

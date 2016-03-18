@@ -53,6 +53,11 @@ public:
     static const unsigned int DEPTH_HEIGHT = 424;
     static const unsigned int DATA_LENGTH_DEPTH = DEPTH_WIDTH * DEPTH_HEIGHT * (BITS_PER_PIXEL_DEPTH / 8);
 
+    static const unsigned int BITS_PER_PIXEL_BODY_INDEX = BITS_PER_PIXEL_DEPTH;
+    static const unsigned int BODY_INDEX_WIDTH = DEPTH_WIDTH;
+    static const unsigned int BODY_INDEX_HEIGHT = DEPTH_HEIGHT;
+    static const unsigned int DATA_LENGTH_BODY_INDEX = DATA_LENGTH_DEPTH;
+
 public:
     KinectHandler();
     ~KinectHandler();
