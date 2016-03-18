@@ -1,5 +1,7 @@
 #include "SkeletonSmoother.h"
 #include "GePoTool.h"
+#include "KinectHandler.h"
+#include <iostream>
 
 SkeletonSmoother::SkeletonSmoother(ICoordinateMapper *coordinateMapper)
     : m_CoordinateMapper(coordinateMapper)

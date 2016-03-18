@@ -1,19 +1,23 @@
 #include "GePoTool.h"
-#include <iostream>
+#include "KinectHandler.h"
 #include <string>
 
 GePoTool::GePoTool(const unsigned int &sensorIniteType)
-    : m_KinectHandler()
+    : m_KinectHandler(new KinectHandler())
     , m_SensorTime(0)
 {
     std::fill(m_Bodies.begin(), m_Bodies.end(), nullptr);
-    m_KinectHandler.initializeDefaultSensor(sensorIniteType);
-    m_KinectHandler.m_ProcessBodyFunc = std::bind(&GePoTool::processBody, this, std::placeholders::_1, std::placeholders::_2);
+    m_KinectHandler->initializeDefaultSensor(sensorIniteType);
+    m_KinectHandler->m_ProcessBodyFunc = std::bind(&GePoTool::processBody, this, std::placeholders::_1, std::placeholders::_2);
 }
 
 GePoTool::~GePoTool()
 {
-    m_KinectHandler.closeSensor();
+    if (m_KinectHandler) {
+        m_KinectHandler->closeSensor();
+        delete m_KinectHandler;
+        m_KinectHandler = nullptr;
+    }
 }
 
 void GePoTool::processBody(const std::array<IBody *, BODY_COUNT> &bodyArray, UINT64 sensorTime)
@@ -137,7 +141,7 @@ bool GePoTool::removeDetector(DGestureBase *detector)
 
 KinectHandler &GePoTool::getKinectHandler()
 {
-    return m_KinectHandler;
+    return *m_KinectHandler;
 }
 
 IBody *GePoTool::getBody(const BodyIndex &player)
@@ -393,7 +397,7 @@ GePoTool::BodyRect GePoTool::getBodyRect(IBody *body)
         cameraPoints[shoulderLeftIndex] = joints[JointType_ShoulderLeft].Position;
 
         //This is mapped for 1920x1080 resolution
-        hr = m_KinectHandler.getCoordinateMapper()->MapCameraPointsToColorSpace(_countof(cameraPoints), cameraPoints, _countof(colorPoints), colorPoints);
+        hr = m_KinectHandler->getCoordinateMapper()->MapCameraPointsToColorSpace(_countof(cameraPoints), cameraPoints, _countof(colorPoints), colorPoints);
         if (SUCCEEDED(hr)) {
             const float shoulderLenght = std::abs(colorPoints[shoulderLeftIndex].X - colorPoints[shoulderRightIndex].X) * 1.2f;
 
@@ -457,9 +461,9 @@ GePoTool::BodyRect GePoTool::getHeadRect(IBody *body)
         cameraPoints[shoulderRightIndex] = joints[JointType_ShoulderRight].Position;
         cameraPoints[shoulderLeftIndex] = joints[JointType_ShoulderLeft].Position;
 
-        colorPoints[headIndex] = m_KinectHandler.mapBodyPointToScreenPoint(cameraPoints[headIndex]);
-        colorPoints[shoulderRightIndex] = m_KinectHandler.mapBodyPointToScreenPoint(cameraPoints[shoulderRightIndex]);
-        colorPoints[shoulderLeftIndex] = m_KinectHandler.mapBodyPointToScreenPoint(cameraPoints[shoulderLeftIndex]);
+        colorPoints[headIndex] = m_KinectHandler->mapBodyPointToScreenPoint(cameraPoints[headIndex]);
+        colorPoints[shoulderRightIndex] = m_KinectHandler->mapBodyPointToScreenPoint(cameraPoints[shoulderRightIndex]);
+        colorPoints[shoulderLeftIndex] = m_KinectHandler->mapBodyPointToScreenPoint(cameraPoints[shoulderLeftIndex]);
 
         const float shoulderLenght = std::abs(colorPoints[shoulderLeftIndex].X - colorPoints[shoulderRightIndex].X) * 1.1f;
 
@@ -552,7 +556,7 @@ JointType GePoTool::getActiveHand(Joint *joints)
 
 IBody *GePoTool::getClosestBody()
 {
-    const int index = getBodyIndexWithTrackingID(m_KinectHandler.getClosestBodyID());
+    const int index = getBodyIndexWithTrackingID(m_KinectHandler->getClosestBodyID());
     if (index < 0) {
         return nullptr;
     }

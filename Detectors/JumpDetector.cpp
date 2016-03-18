@@ -1,5 +1,6 @@
 #include "JumpDetector.h"
 #include "GePoTool.h"
+#include "KinectHandler.h"
 
 DJump::DJump(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DJump", customID)

@@ -1,7 +1,7 @@
 #ifndef GESTUREDETECTORBASE
 #define GESTUREDETECTORBASE
 #include "Kinect.h"
-#include <iostream>
+#include <string>
 using UID = unsigned int;//Short for Unique ID
 
 /**

@@ -1,7 +1,13 @@
 #ifndef GEPOTOOL_H
 #define GEPOTOOL_H
-#include "KinectHandler.h"
 #include "GestureDetectorBase.h"
+#include <functional>
+#include <vector>
+#include <array>
+#include <string>
+
+using BodyIndex = unsigned int;
+class KinectHandler;
 
 class GePoTool
 {
@@ -183,7 +189,7 @@ public:
 
 
 private:
-    KinectHandler m_KinectHandler;
+    KinectHandler *m_KinectHandler;
     UINT64 m_SensorTime;
     std::array<IBody *, BODY_COUNT> m_Bodies;
     std::vector<unsigned int> m_UIDs;
