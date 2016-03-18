@@ -162,9 +162,9 @@ private:
                 depthBuffer = nullptr;
             }
 
-            if (depthBufferRGBX) {
-                delete[] depthBufferRGBX;
-                depthBufferRGBX = nullptr;
+            if (depthBufferRGB) {
+                delete[] depthBufferRGB;
+                depthBufferRGB = nullptr;
             }
         }
 
@@ -175,7 +175,7 @@ private:
         USHORT minReliableDistance = 0, maxReliableDistance = 0;
         UINT depthBufferSize = 0;
         UINT16 *depthBuffer = nullptr;
-        RGBTRIPLE *depthBufferRGBX = nullptr;
+        RGBTRIPLE *depthBufferRGB = nullptr;
     };
 
     struct ColorFrameInfo {

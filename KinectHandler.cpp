@@ -154,7 +154,7 @@ bool KinectHandler::isColorDataAvailable() const
 
 const unsigned short *KinectHandler::getDepthData() const
 {
-    return reinterpret_cast<unsigned short *>(m_DepthInfo.depthBufferRGBX);
+    return reinterpret_cast<unsigned short *>(m_DepthInfo.depthBufferRGB);
 }
 
 bool KinectHandler::isDepthDataAvailable() const
@@ -431,11 +431,11 @@ HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFra
 
     //Process the depth image
     if (SUCCEEDED(hr) && depthInfo.depthBuffer != nullptr && depthInfo.depthWidth == DEPTH_WIDTH && depthInfo.depthHeight == DEPTH_HEIGHT) {
-        if (depthInfo.depthBufferRGBX == nullptr) {
-            depthInfo.depthBufferRGBX = new RGBTRIPLE[DEPTH_WIDTH * DEPTH_HEIGHT];
+        if (depthInfo.depthBufferRGB == nullptr) {
+            depthInfo.depthBufferRGB = new RGBTRIPLE[DEPTH_WIDTH * DEPTH_HEIGHT];
         }
 
-        RGBTRIPLE *rgb = depthInfo.depthBufferRGBX;
+        RGBTRIPLE *rgb = depthInfo.depthBufferRGB;
         UINT16 *buffer = depthInfo.depthBuffer;
 
         //End pixel is start + width * height - 1
