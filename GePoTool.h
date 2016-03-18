@@ -133,7 +133,7 @@ public:
      * @brief Since KinectHandler only directs visible bodies to us, return the size of m_Bodies
      * @return
      */
-    unsigned int getDetectedBodyCount() const;
+    size_t getDetectedBodyCount() const;
 
     /**
      * @brief Returns a bounding box whose origin is on the top left corner.

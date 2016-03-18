@@ -33,8 +33,8 @@ void GePoTool::bodyNotificitons(const std::array<IBody *, BODY_COUNT> &bodyArray
     auto countVisible = [](IBody * b) {
         return b != nullptr;
     };
-    const unsigned int previousBodyCount = std::count_if(m_Bodies.begin(), m_Bodies.end(), countVisible);
-    const unsigned int newBodyCount = std::count_if(bodyArray.begin(), bodyArray.end(), countVisible);
+    const std::size_t previousBodyCount = std::count_if(m_Bodies.begin(), m_Bodies.end(), countVisible);
+    const std::size_t newBodyCount = std::count_if(bodyArray.begin(), bodyArray.end(), countVisible);
 
     if (newBodyCount == 0) {
         if (onBodyLost) {
@@ -58,7 +58,7 @@ void GePoTool::bodyNotificitons(const std::array<IBody *, BODY_COUNT> &bodyArray
     }
     //If there are already items, and new bodyCount is bigger than the m_Bodies then new players joined.
     else if (newBodyCount > previousBodyCount) {
-        for (unsigned int i = previousBodyCount - 1; i < newBodyCount; i++) {
+        for (std::size_t i = previousBodyCount - 1; i < newBodyCount; i++) {
             if (onBodyFound) {
                 onBodyFound(i);
             }
@@ -355,7 +355,7 @@ UID GePoTool::determinePlayerPosture(const BodyIndex &bodyIndex, const float &de
     return detectedGesture;
 }
 
-unsigned int GePoTool::getDetectedBodyCount() const
+std::size_t GePoTool::getDetectedBodyCount() const
 {
     auto countVisible = [](IBody * b) {
         return b != nullptr;
