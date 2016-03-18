@@ -121,8 +121,6 @@ private:
     ICoordinateMapper *m_CoordinateMapper;
     DepthSpacePoint *m_DepthCoordinates;
 
-    RGBQUAD *m_ColorRGBX;
-
     FrameSourceTypes m_InitType;
     Vector4 m_FloorClipPlane;
     WAITABLE_HANDLE m_FrameArrivedHandle;

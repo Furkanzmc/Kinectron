@@ -19,16 +19,15 @@ KinectHandler::KinectHandler()
     , m_BodyFrame(nullptr)
     , m_CoordinateMapper(nullptr)
     , m_DepthCoordinates(nullptr)
-    , m_ColorRGBX(nullptr)
     , m_InitType(FrameSourceTypes_None)
     , m_FrameArrivedHandle(NULL)
     , m_ClosestBodyID(0)
     , m_ClosestBodyOffset(-1.f)
     , m_DesiredBodyCount(BODY_COUNT)
+    , m_DepthInfo()
+    , m_ColorFrameInfo()
+    , m_BodyIndexInfo()
 {
-    // create heap storage for color pixel data in RGBX format
-    m_ColorRGBX = new RGBQUAD[COLOR_WIDTH * COLOR_HEIGHT];
-
     // create heap storage for the coorinate mapping from color to depth
     m_DepthCoordinates = new DepthSpacePoint[COLOR_WIDTH * COLOR_HEIGHT];
 }
@@ -46,10 +45,6 @@ KinectHandler::~KinectHandler()
         m_ThreadScreenshot.join();
     }
 
-    if (m_ColorRGBX) {
-        delete[] m_ColorRGBX;
-        m_ColorRGBX = nullptr;
-    }
     if (m_DepthCoordinates) {
         delete[] m_DepthCoordinates;
         m_DepthCoordinates = nullptr;
@@ -148,7 +143,7 @@ ICoordinateMapper *KinectHandler::getCoordinateMapper() const
 
 const unsigned char *KinectHandler::getColorData() const
 {
-    return reinterpret_cast<unsigned char *>(m_ColorRGBX);;
+    return reinterpret_cast<unsigned char *>(m_ColorFrameInfo.colorBuffer);;
 }
 
 bool KinectHandler::isColorDataAvailable() const
@@ -439,18 +434,20 @@ HRESULT KinectHandler::updateColorFrameData(ColorFrameInfo &colorFrameInfo, ICol
         if (colorFrameInfo.imageFormat == ColorImageFormat_Bgra) {
             hr = colorFrame->AccessRawUnderlyingBuffer(&colorFrameInfo.colorBufferSize, reinterpret_cast<BYTE **>(&colorFrameInfo.colorBuffer));
         }
-        else if (m_ColorRGBX) {
-            colorFrameInfo.colorBuffer = m_ColorRGBX;
+        else if (SUCCEEDED(hr)) {
+            if (colorFrameInfo.colorBuffer == nullptr) {
+                colorFrameInfo.colorBuffer = new RGBQUAD[COLOR_WIDTH * COLOR_HEIGHT];;
+            }
+
             colorFrameInfo.colorBufferSize = COLOR_WIDTH * COLOR_HEIGHT * sizeof(RGBQUAD);
             hr = colorFrame->CopyConvertedFrameDataToArray(colorFrameInfo.colorBufferSize, reinterpret_cast<BYTE *>(colorFrameInfo.colorBuffer)
                     , ColorImageFormat_Rgba);
-            m_ColorRGBX = colorFrameInfo.colorBuffer;
             m_isColorDataAvailable = true;
             if (m_TakeScreenshotFunc && m_CanTakeSnapshot) {
                 if (m_ThreadScreenshot.joinable()) {
                     m_ThreadScreenshot.join();
                 }
-                m_ThreadScreenshot = std::thread(m_TakeScreenshotFunc, reinterpret_cast<unsigned char *>(m_ColorRGBX), DATA_LENGTH, COLOR_WIDTH, COLOR_HEIGHT,
+                m_ThreadScreenshot = std::thread(m_TakeScreenshotFunc, reinterpret_cast<unsigned char *>(colorFrameInfo.colorBuffer), DATA_LENGTH, COLOR_WIDTH, COLOR_HEIGHT,
                                                  BITS_PER_PIXEL, m_SnapshotFilePath);
                 m_CanTakeSnapshot = false;
             }
