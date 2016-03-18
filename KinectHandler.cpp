@@ -439,10 +439,10 @@ HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFra
         UINT16 *buffer = depthInfo.buffer;
 
         //End pixel is start + width * height - 1
-        const UINT16 *pBufferEnd = buffer + (depthInfo.width * depthInfo.height);
+        const UINT16 *bufferEnd = buffer + (depthInfo.width * depthInfo.height);
 
-        while (buffer < pBufferEnd) {
-            USHORT depth = *buffer;
+        while (buffer < bufferEnd) {
+            const USHORT depth = *buffer;
 
             //To convert to a byte, we're discarding the most-significant
             //rather than least-significant bits.
@@ -451,11 +451,11 @@ HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFra
 
             //Note: Using conditionals in this loop could degrade performance.
             //Consider using a lookup table instead when writing production code.
-            BYTE intensity = static_cast<BYTE>((depth >= depthInfo.minReliableDistance) && (depth <= depthInfo.maxReliableDistance) ? (depth % 256) : 0);
+            const BYTE intensity = static_cast<BYTE>((depth >= depthInfo.minReliableDistance) && (depth <= depthInfo.maxReliableDistance) ? (depth % 256) : 0);
 
-            rgb->rgbtRed   = intensity;
+            rgb->rgbtRed = intensity;
             rgb->rgbtGreen = intensity;
-            rgb->rgbtBlue  = intensity;
+            rgb->rgbtBlue = intensity;
 
             ++rgb;
             ++buffer;
