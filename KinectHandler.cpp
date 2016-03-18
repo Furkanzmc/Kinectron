@@ -144,7 +144,7 @@ ICoordinateMapper *KinectHandler::getCoordinateMapper() const
 
 const unsigned char *KinectHandler::getColorData() const
 {
-    return reinterpret_cast<unsigned char *>(m_ColorFrameInfo.colorBuffer);;
+    return reinterpret_cast<unsigned char *>(m_ColorFrameInfo.bufferRGBX);;
 }
 
 bool KinectHandler::isColorDataAvailable() const
@@ -154,7 +154,7 @@ bool KinectHandler::isColorDataAvailable() const
 
 const unsigned short *KinectHandler::getDepthData() const
 {
-    return reinterpret_cast<unsigned short *>(m_DepthInfo.depthBufferRGB);
+    return reinterpret_cast<unsigned short *>(m_DepthInfo.bufferRGB);
 }
 
 bool KinectHandler::isDepthDataAvailable() const
@@ -241,9 +241,9 @@ void KinectHandler::updateSensor()
             updateBodyIndexFrameData(m_BodyIndexInfo, m_BodyIndexFrame);
 
             //Release the frame descriptions
-            safeRelease(m_DepthInfo.depthFrameDescription);
-            safeRelease(m_ColorFrameInfo.colorFrameDescription);
-            safeRelease(m_BodyIndexInfo.bodyIndexFrameDescription);
+            safeRelease(m_DepthInfo.frameDescription);
+            safeRelease(m_ColorFrameInfo.frameDescription);
+            safeRelease(m_BodyIndexInfo.frameDescription);
         }
     }
 }
@@ -411,13 +411,13 @@ HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFra
 
     HRESULT hr = depthFrame->get_RelativeTime(&depthInfo.depthTime);
     if (SUCCEEDED(hr)) {
-        hr = depthFrame->get_FrameDescription(&depthInfo.depthFrameDescription);
+        hr = depthFrame->get_FrameDescription(&depthInfo.frameDescription);
     }
     if (SUCCEEDED(hr)) {
-        hr = depthInfo.depthFrameDescription->get_Width(&depthInfo.depthWidth);
+        hr = depthInfo.frameDescription->get_Width(&depthInfo.width);
     }
     if (SUCCEEDED(hr)) {
-        hr = depthInfo.depthFrameDescription->get_Height(&depthInfo.depthHeight);
+        hr = depthInfo.frameDescription->get_Height(&depthInfo.height);
     }
     if (SUCCEEDED(hr)) {
         hr = depthFrame->get_DepthMinReliableDistance(&depthInfo.minReliableDistance);
@@ -426,20 +426,20 @@ HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFra
         hr = depthFrame->get_DepthMaxReliableDistance(&depthInfo.maxReliableDistance);
     }
     if (SUCCEEDED(hr)) {
-        hr = depthFrame->AccessUnderlyingBuffer(&depthInfo.depthBufferSize, &depthInfo.depthBuffer);
+        hr = depthFrame->AccessUnderlyingBuffer(&depthInfo.bufferSize, &depthInfo.buffer);
     }
 
     //Process the depth image
-    if (SUCCEEDED(hr) && depthInfo.depthBuffer != nullptr && depthInfo.depthWidth == DEPTH_WIDTH && depthInfo.depthHeight == DEPTH_HEIGHT) {
-        if (depthInfo.depthBufferRGB == nullptr) {
-            depthInfo.depthBufferRGB = new RGBTRIPLE[DEPTH_WIDTH * DEPTH_HEIGHT];
+    if (SUCCEEDED(hr) && depthInfo.buffer != nullptr && depthInfo.width == DEPTH_WIDTH && depthInfo.height == DEPTH_HEIGHT) {
+        if (depthInfo.bufferRGB == nullptr) {
+            depthInfo.bufferRGB = new RGBTRIPLE[DEPTH_WIDTH * DEPTH_HEIGHT];
         }
 
-        RGBTRIPLE *rgb = depthInfo.depthBufferRGB;
-        UINT16 *buffer = depthInfo.depthBuffer;
+        RGBTRIPLE *rgb = depthInfo.bufferRGB;
+        UINT16 *buffer = depthInfo.buffer;
 
         //End pixel is start + width * height - 1
-        const UINT16 *pBufferEnd = buffer + (depthInfo.depthWidth * depthInfo.depthHeight);
+        const UINT16 *pBufferEnd = buffer + (depthInfo.width * depthInfo.height);
 
         while (buffer < pBufferEnd) {
             USHORT depth = *buffer;
@@ -474,34 +474,34 @@ HRESULT KinectHandler::updateColorFrameData(ColorFrameInfo &colorFrameInfo, ICol
         return E_FAIL;
     }
 
-    HRESULT hr = colorFrame->get_FrameDescription(&colorFrameInfo.colorFrameDescription);
+    HRESULT hr = colorFrame->get_FrameDescription(&colorFrameInfo.frameDescription);
     if (SUCCEEDED(hr)) {
-        hr = colorFrameInfo.colorFrameDescription->get_Width(&colorFrameInfo.colorWidth);
+        hr = colorFrameInfo.frameDescription->get_Width(&colorFrameInfo.width);
     }
     if (SUCCEEDED(hr)) {
-        hr = colorFrameInfo.colorFrameDescription->get_Height(&colorFrameInfo.colorHeight);
+        hr = colorFrameInfo.frameDescription->get_Height(&colorFrameInfo.height);
     }
     if (SUCCEEDED(hr)) {
         hr = colorFrame->get_RawColorImageFormat(&colorFrameInfo.imageFormat);
     }
     if (SUCCEEDED(hr)) {
         if (colorFrameInfo.imageFormat == ColorImageFormat_Bgra) {
-            hr = colorFrame->AccessRawUnderlyingBuffer(&colorFrameInfo.colorBufferSize, reinterpret_cast<BYTE **>(&colorFrameInfo.colorBuffer));
+            hr = colorFrame->AccessRawUnderlyingBuffer(&colorFrameInfo.bufferSize, reinterpret_cast<BYTE **>(&colorFrameInfo.bufferRGBX));
         }
         else if (SUCCEEDED(hr)) {
-            if (colorFrameInfo.colorBuffer == nullptr) {
-                colorFrameInfo.colorBuffer = new RGBQUAD[COLOR_WIDTH * COLOR_HEIGHT];;
+            if (colorFrameInfo.bufferRGBX == nullptr) {
+                colorFrameInfo.bufferRGBX = new RGBQUAD[COLOR_WIDTH * COLOR_HEIGHT];;
             }
 
-            colorFrameInfo.colorBufferSize = COLOR_WIDTH * COLOR_HEIGHT * sizeof(RGBQUAD);
-            hr = colorFrame->CopyConvertedFrameDataToArray(colorFrameInfo.colorBufferSize, reinterpret_cast<BYTE *>(colorFrameInfo.colorBuffer)
+            colorFrameInfo.bufferSize = COLOR_WIDTH * COLOR_HEIGHT * sizeof(RGBQUAD);
+            hr = colorFrame->CopyConvertedFrameDataToArray(colorFrameInfo.bufferSize, reinterpret_cast<BYTE *>(colorFrameInfo.bufferRGBX)
                     , ColorImageFormat_Rgba);
             m_isColorDataAvailable = true;
             if (m_TakeScreenshotFunc && m_CanTakeSnapshot) {
                 if (m_ThreadScreenshot.joinable()) {
                     m_ThreadScreenshot.join();
                 }
-                m_ThreadScreenshot = std::thread(m_TakeScreenshotFunc, reinterpret_cast<unsigned char *>(colorFrameInfo.colorBuffer), DATA_LENGTH_COLOR, COLOR_WIDTH, COLOR_HEIGHT,
+                m_ThreadScreenshot = std::thread(m_TakeScreenshotFunc, reinterpret_cast<unsigned char *>(colorFrameInfo.bufferRGBX), DATA_LENGTH_COLOR, COLOR_WIDTH, COLOR_HEIGHT,
                                                  BITS_PER_PIXEL_COLOR, m_SnapshotFilePath);
                 m_CanTakeSnapshot = false;
             }
@@ -520,15 +520,15 @@ HRESULT KinectHandler::updateBodyIndexFrameData(BodyIndexInfo &bodyIndexInfo, IB
         return E_FAIL;
     }
 
-    HRESULT hr = bodyIndexFrame->get_FrameDescription(&bodyIndexInfo.bodyIndexFrameDescription);
+    HRESULT hr = bodyIndexFrame->get_FrameDescription(&bodyIndexInfo.frameDescription);
     if (SUCCEEDED(hr)) {
-        hr = bodyIndexInfo.bodyIndexFrameDescription->get_Width(&bodyIndexInfo.bodyIndexWidth);
+        hr = bodyIndexInfo.frameDescription->get_Width(&bodyIndexInfo.width);
     }
     if (SUCCEEDED(hr)) {
-        hr = bodyIndexInfo.bodyIndexFrameDescription->get_Height(&bodyIndexInfo.bodyIndexHeight);
+        hr = bodyIndexInfo.frameDescription->get_Height(&bodyIndexInfo.height);
     }
     if (SUCCEEDED(hr)) {
-        hr = bodyIndexFrame->AccessUnderlyingBuffer(&bodyIndexInfo.bodyIndexBufferSize, &bodyIndexInfo.bodyIndexBuffer);
+        hr = bodyIndexFrame->AccessUnderlyingBuffer(&bodyIndexInfo.bufferSize, &bodyIndexInfo.buffer);
     }
     return hr;
 }

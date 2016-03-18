@@ -156,61 +156,61 @@ private:
     struct DepthFrameInfo {
         ~DepthFrameInfo()
         {
-            safeRelease(depthFrameDescription);
-            if (depthBuffer) {
-                delete[] depthBuffer;
-                depthBuffer = nullptr;
+            safeRelease(frameDescription);
+            if (buffer) {
+                delete[] buffer;
+                buffer = nullptr;
             }
 
-            if (depthBufferRGB) {
-                delete[] depthBufferRGB;
-                depthBufferRGB = nullptr;
+            if (bufferRGB) {
+                delete[] bufferRGB;
+                bufferRGB = nullptr;
             }
         }
 
         INT64 depthTime = 0;
-        IFrameDescription *depthFrameDescription = nullptr;
-        int depthWidth = 0;
-        int depthHeight = 0;
+        IFrameDescription *frameDescription = nullptr;
+        int width = 0;
+        int height = 0;
         USHORT minReliableDistance = 0, maxReliableDistance = 0;
-        UINT depthBufferSize = 0;
-        UINT16 *depthBuffer = nullptr;
-        RGBTRIPLE *depthBufferRGB = nullptr;
+        UINT bufferSize = 0;
+        UINT16 *buffer = nullptr;
+        RGBTRIPLE *bufferRGB = nullptr;
     };
 
     struct ColorFrameInfo {
         ~ColorFrameInfo()
         {
-            safeRelease(colorFrameDescription);
-            if (colorBuffer) {
-                delete[] colorBuffer;
-                colorBuffer = nullptr;
+            safeRelease(frameDescription);
+            if (bufferRGBX) {
+                delete[] bufferRGBX;
+                bufferRGBX = nullptr;
             }
         }
 
-        IFrameDescription *colorFrameDescription = nullptr;
-        int colorWidth = 0;
-        int colorHeight = 0;
+        IFrameDescription *frameDescription = nullptr;
+        int width = 0;
+        int height = 0;
         ColorImageFormat imageFormat = ColorImageFormat_None;
-        UINT colorBufferSize = 0;
-        RGBQUAD *colorBuffer = nullptr;
+        UINT bufferSize = 0;
+        RGBQUAD *bufferRGBX = nullptr;
     };
 
     struct BodyIndexInfo {
         ~BodyIndexInfo()
         {
-            safeRelease(bodyIndexFrameDescription);
-            if (bodyIndexBuffer) {
-                delete[] bodyIndexBuffer;
-                bodyIndexBuffer = nullptr;
+            safeRelease(frameDescription);
+            if (buffer) {
+                delete[] buffer;
+                buffer = nullptr;
             }
         }
 
-        IFrameDescription *bodyIndexFrameDescription = nullptr;
-        int bodyIndexWidth = 0;
-        int bodyIndexHeight = 0;
-        UINT bodyIndexBufferSize = 0;
-        UINT8 *bodyIndexBuffer = nullptr;
+        IFrameDescription *frameDescription = nullptr;
+        int width = 0;
+        int height = 0;
+        UINT bufferSize = 0;
+        UINT8 *buffer = nullptr;
     };
 
     DepthFrameInfo m_DepthInfo;
