@@ -8,6 +8,7 @@
 KinectHandler::KinectHandler()
     : m_isColorDataAvailable(false)
     , m_isDepthDataAvailable(false)
+    , m_isBodyIndexDataAvailable(false)
     , m_CanTakeSnapshot(false)
     , m_IsSensorClosed(false)
     , m_SnapshotFilePath("")
@@ -162,6 +163,16 @@ bool KinectHandler::isDepthDataAvailable() const
     return m_isDepthDataAvailable;
 }
 
+const unsigned short *KinectHandler::getBodyIndexData() const
+{
+    return reinterpret_cast<unsigned short *>(m_BodyIndexInfo.bufferRGB);
+}
+
+bool KinectHandler::isBodyIndexDataAvailable() const
+{
+    return m_isBodyIndexDataAvailable;
+}
+
 void KinectHandler::updateSensor()
 {
     std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
@@ -178,6 +189,7 @@ void KinectHandler::updateSensor()
 
         m_isColorDataAvailable = false;
         m_isDepthDataAvailable = false;
+        m_isBodyIndexDataAvailable = false;
         //Safe release the frames before we can use them again
         safeRelease(m_DepthFrame);
         safeRelease(m_ColorFrame);
@@ -494,15 +506,14 @@ HRESULT KinectHandler::updateColorFrameData(ColorFrameInfo &colorFrameInfo, ICol
             }
 
             colorFrameInfo.bufferSize = COLOR_WIDTH * COLOR_HEIGHT * sizeof(RGBQUAD);
-            hr = colorFrame->CopyConvertedFrameDataToArray(colorFrameInfo.bufferSize, reinterpret_cast<BYTE *>(colorFrameInfo.bufferRGBX)
-                    , ColorImageFormat_Rgba);
+            hr = colorFrame->CopyConvertedFrameDataToArray(colorFrameInfo.bufferSize, reinterpret_cast<BYTE *>(colorFrameInfo.bufferRGBX), ColorImageFormat_Rgba);
             m_isColorDataAvailable = true;
             if (m_TakeScreenshotFunc && m_CanTakeSnapshot) {
                 if (m_ThreadScreenshot.joinable()) {
                     m_ThreadScreenshot.join();
                 }
-                m_ThreadScreenshot = std::thread(m_TakeScreenshotFunc, reinterpret_cast<unsigned char *>(colorFrameInfo.bufferRGBX), DATA_LENGTH_COLOR, COLOR_WIDTH, COLOR_HEIGHT,
-                                                 BITS_PER_PIXEL_COLOR, m_SnapshotFilePath);
+                m_ThreadScreenshot = std::thread(m_TakeScreenshotFunc, reinterpret_cast<unsigned char *>(colorFrameInfo.bufferRGBX),
+                                                 DATA_LENGTH_COLOR, COLOR_WIDTH, COLOR_HEIGHT, BITS_PER_PIXEL_COLOR, m_SnapshotFilePath);
                 m_CanTakeSnapshot = false;
             }
         }
@@ -520,7 +531,10 @@ HRESULT KinectHandler::updateBodyIndexFrameData(BodyIndexInfo &bodyIndexInfo, IB
         return E_FAIL;
     }
 
-    HRESULT hr = bodyIndexFrame->get_FrameDescription(&bodyIndexInfo.frameDescription);
+    HRESULT hr = bodyIndexFrame->get_RelativeTime(&bodyIndexInfo.bodyIndexTime);
+    if (SUCCEEDED(hr)) {
+        hr = bodyIndexFrame->get_FrameDescription(&bodyIndexInfo.frameDescription);
+    }
     if (SUCCEEDED(hr)) {
         hr = bodyIndexInfo.frameDescription->get_Width(&bodyIndexInfo.width);
     }
@@ -530,6 +544,33 @@ HRESULT KinectHandler::updateBodyIndexFrameData(BodyIndexInfo &bodyIndexInfo, IB
     if (SUCCEEDED(hr)) {
         hr = bodyIndexFrame->AccessUnderlyingBuffer(&bodyIndexInfo.bufferSize, &bodyIndexInfo.buffer);
     }
+
+    //Process body index
+    if (SUCCEEDED(hr) && bodyIndexInfo.buffer != nullptr && bodyIndexInfo.width == DEPTH_WIDTH && bodyIndexInfo.height == DEPTH_HEIGHT) {
+        if (bodyIndexInfo.bufferRGB == nullptr) {
+            bodyIndexInfo.bufferRGB = new RGBTRIPLE[DEPTH_WIDTH * DEPTH_HEIGHT];
+        }
+
+        RGBTRIPLE *rgb = bodyIndexInfo.bufferRGB;
+        UINT8 *buffer = bodyIndexInfo.buffer;
+
+        //End pixel is start + width * height - 1
+        const UINT8 *bufferEnd = buffer + (bodyIndexInfo.width * bodyIndexInfo.height);
+
+        while (buffer < bufferEnd) {
+            const USHORT pixel = *buffer;
+
+            rgb->rgbtRed = pixel < 6 ? 255 : 0;
+            rgb->rgbtGreen = 0;
+            rgb->rgbtBlue = 0;
+
+            ++rgb;
+            ++buffer;
+        }
+
+        m_isBodyIndexDataAvailable = true;
+    }
+
     return hr;
 }
 

@@ -89,6 +89,9 @@ public:
     const unsigned short *getDepthData() const;
     bool isDepthDataAvailable() const;
 
+    const unsigned short *getBodyIndexData() const;
+    bool isBodyIndexDataAvailable() const;
+
     PointF mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint);
 
     const UINT64 &getClosestBodyID() const;
@@ -115,6 +118,7 @@ public:
 private:
     bool m_isColorDataAvailable,//This is set to true when the Kinect color processing is done
          m_isDepthDataAvailable,//This is set to true when the Kinect depth processing is done
+         m_isBodyIndexDataAvailable,//This is set to true when the Kinect body index processing is done
          m_CanTakeSnapshot,
          m_IsSensorClosed;
     std::string m_SnapshotFilePath;
@@ -206,11 +210,13 @@ private:
             }
         }
 
+        INT64 bodyIndexTime = 0;
         IFrameDescription *frameDescription = nullptr;
         int width = 0;
         int height = 0;
         UINT bufferSize = 0;
         UINT8 *buffer = nullptr;
+        RGBTRIPLE *bufferRGB = nullptr;
     };
 
     DepthFrameInfo m_DepthInfo;
