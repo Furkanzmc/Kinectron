@@ -23,14 +23,15 @@ KinectHandler::KinectHandler()
     , m_IRFrame(nullptr)
     , m_CoordinateMapper(nullptr)
     , m_InitType(FrameSourceTypes_None)
-    , m_FrameArrivedHandle(NULL)
     , m_ClosestBodyID(0)
     , m_ClosestBodyOffset(-1.f)
     , m_DesiredBodyCount(BODY_COUNT)
-    , m_DepthInfo()
+      // Frame Info
+    , m_DepthFrameInfo()
     , m_ColorFrameInfo()
-    , m_BodyIndexInfo()
-    , m_IRInfo()
+    , m_BodyIndexFrameInfo()
+    , m_IRFrameInfo()
+    , m_BodyFrameInfo()
 {
 
 }
@@ -70,10 +71,7 @@ HRESULT KinectHandler::initializeDefaultSensor(const unsigned int &initeType)
             hr = m_Sensor->OpenMultiSourceFrameReader(initeType, &m_MultiSourceFrameReader);
         }
         if (SUCCEEDED(hr)) {
-            hr = m_MultiSourceFrameReader->SubscribeMultiSourceFrameArrived(&m_FrameArrivedHandle);
-            if (SUCCEEDED(hr)) {
-                m_ThreadUpdate = std::thread(&KinectHandler::updateSensor, this);
-            }
+            m_ThreadUpdate = std::thread(&KinectHandler::updateSensor, this);
         }
     }
 
@@ -106,16 +104,16 @@ void KinectHandler::takeSanpshot(const std::string &filePath)
 
 const Vector4 &KinectHandler::getFloorClipPlane()
 {
-    return m_FloorClipPlane;
+    return m_BodyFrameInfo.floorClipPlane;
 }
 
 bool KinectHandler::isFloorVisible() const
 {
-    // Smooth out the skeleton data
     bool floor = false;
-    if (m_FloorClipPlane.x != 0 && m_FloorClipPlane.y != 0 && m_FloorClipPlane.z != 0 && m_FloorClipPlane.w != 0) {
+    if (m_BodyFrameInfo.floorClipPlane.x != 0 && m_BodyFrameInfo.floorClipPlane.y != 0 && m_BodyFrameInfo.floorClipPlane.z != 0 && m_BodyFrameInfo.floorClipPlane.w != 0) {
         floor = true;
     }
+
     return floor;
 }
 
@@ -125,18 +123,34 @@ double KinectHandler::getDistanceFromFloor(const CameraSpacePoint &jointPosition
     if (!isFloorVisible()) {
         return -1;
     }
-    double distanceFromFloor = 0;
-    const double floorClipPlaneX = m_FloorClipPlane.x;
-    const double floorClipPlaneY = m_FloorClipPlane.y;
-    const double floorClipPlaneZ = m_FloorClipPlane.z;
-    const double floorClipPlaneW = m_FloorClipPlane.w;
-    distanceFromFloor = floorClipPlaneX * jointPosition.X + floorClipPlaneY * jointPosition.Y + floorClipPlaneZ * jointPosition.Z + floorClipPlaneW;
+
+    const double floorClipPlaneX = m_BodyFrameInfo.floorClipPlane.x;
+    const double floorClipPlaneY = m_BodyFrameInfo.floorClipPlane.y;
+    const double floorClipPlaneZ = m_BodyFrameInfo.floorClipPlane.z;
+    const double floorClipPlaneW = m_BodyFrameInfo.floorClipPlane.w;
+
+    const double distanceFromFloor = floorClipPlaneX * jointPosition.X + floorClipPlaneY * jointPosition.Y + floorClipPlaneZ * jointPosition.Z + floorClipPlaneW;
     return distanceFromFloor;
 }
 
 ICoordinateMapper *KinectHandler::getCoordinateMapper() const
 {
     return m_CoordinateMapper;
+}
+
+PointF KinectHandler::mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint)
+{
+    // Calculate the body's position on the screen
+    PointF screenPos = {0, 0};
+    ColorSpacePoint colorPoint = {0, 0};
+
+    if (m_CoordinateMapper) {
+        m_CoordinateMapper->MapCameraPointToColorSpace(bodyPoint, &colorPoint);
+        screenPos.X = colorPoint.X;
+        screenPos.Y = colorPoint.Y;
+    }
+
+    return screenPos;
 }
 
 const unsigned char *KinectHandler::getColorData() const
@@ -151,7 +165,7 @@ bool KinectHandler::isColorDataAvailable() const
 
 const unsigned short *KinectHandler::getDepthData() const
 {
-    return reinterpret_cast<unsigned short *>(m_DepthInfo.bufferRGB);
+    return reinterpret_cast<unsigned short *>(m_DepthFrameInfo.bufferRGB);
 }
 
 bool KinectHandler::isDepthDataAvailable() const
@@ -161,7 +175,7 @@ bool KinectHandler::isDepthDataAvailable() const
 
 const unsigned short *KinectHandler::getBodyIndexData() const
 {
-    return reinterpret_cast<unsigned short *>(m_BodyIndexInfo.bufferRGB);
+    return reinterpret_cast<unsigned short *>(m_BodyIndexFrameInfo.bufferRGB);
 }
 
 bool KinectHandler::isBodyIndexDataAvailable() const
@@ -171,7 +185,7 @@ bool KinectHandler::isBodyIndexDataAvailable() const
 
 const unsigned short *KinectHandler::getIRData() const
 {
-    return reinterpret_cast<unsigned short *>(m_IRInfo.bufferRGB);
+    return reinterpret_cast<unsigned short *>(m_IRFrameInfo.bufferRGB);
 }
 
 bool KinectHandler::isIRDataAvailable() const
@@ -268,19 +282,19 @@ void KinectHandler::updateSensor()
 
             updateBodyFrame(m_BodyFrame);
             updateColorFrameData(m_ColorFrameInfo, m_ColorFrame);
-            updateDepthFrameData(m_DepthInfo, m_DepthFrame);
-            updateBodyIndexFrameData(m_BodyIndexInfo, m_BodyIndexFrame);
-            updateIRFrameData(m_IRInfo, m_IRFrame);
+            updateDepthFrameData(m_DepthFrameInfo, m_DepthFrame);
+            updateBodyIndexFrameData(m_BodyIndexFrameInfo, m_BodyIndexFrame);
+            updateIRFrameData(m_IRFrameInfo, m_IRFrame);
 
             // Release the frame descriptions
-            safeRelease(m_DepthInfo.frameDescription);
+            safeRelease(m_DepthFrameInfo.frameDescription);
             safeRelease(m_ColorFrameInfo.frameDescription);
-            safeRelease(m_BodyIndexInfo.frameDescription);
+            safeRelease(m_BodyIndexFrameInfo.frameDescription);
         }
     }
 }
 
-void KinectHandler::processBody(UINT64 delta, int bodyCount, IBody **bodies)
+void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody **bodies)
 {
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
     HRESULT hr = E_FAIL;
@@ -441,7 +455,7 @@ HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFra
         return E_FAIL;
     }
 
-    HRESULT hr = depthFrame->get_RelativeTime(&depthInfo.depthTime);
+    HRESULT hr = depthFrame->get_RelativeTime(&depthInfo.time);
     if (SUCCEEDED(hr)) {
         hr = depthFrame->get_FrameDescription(&depthInfo.frameDescription);
     }
@@ -544,14 +558,14 @@ HRESULT KinectHandler::updateColorFrameData(ColorFrameInfo &colorFrameInfo, ICol
     return hr;
 }
 
-HRESULT KinectHandler::updateBodyIndexFrameData(BodyIndexInfo &bodyIndexInfo, IBodyIndexFrame *bodyIndexFrame)
+HRESULT KinectHandler::updateBodyIndexFrameData(BodyIndexFrameInfo &bodyIndexInfo, IBodyIndexFrame *bodyIndexFrame)
 {
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
     if (bodyIndexFrame == nullptr) {
         return E_FAIL;
     }
 
-    HRESULT hr = bodyIndexFrame->get_RelativeTime(&bodyIndexInfo.bodyIndexTime);
+    HRESULT hr = bodyIndexFrame->get_RelativeTime(&bodyIndexInfo.time);
     if (SUCCEEDED(hr)) {
         hr = bodyIndexFrame->get_FrameDescription(&bodyIndexInfo.frameDescription);
     }
@@ -601,19 +615,19 @@ HRESULT KinectHandler::updateBodyFrame(IBodyFrame *bodyFrame)
         return E_FAIL;
     }
 
-    HRESULT hr = bodyFrame->get_FloorClipPlane(&m_FloorClipPlane);
+    HRESULT hr = bodyFrame->get_FloorClipPlane(&m_BodyFrameInfo.floorClipPlane);
     if (SUCCEEDED(hr)) {
-        INT64 time = 0;
-        hr = m_BodyFrame->get_RelativeTime(&time);
+        hr = bodyFrame->get_RelativeTime(&m_BodyFrameInfo.time);
         IBody *bodies[BODY_COUNT] = {nullptr};
 
         if (SUCCEEDED(hr)) {
-            hr = m_BodyFrame->GetAndRefreshBodyData(_countof(bodies), bodies);
+            hr = bodyFrame->GetAndRefreshBodyData(_countof(bodies), bodies);
         }
         if (SUCCEEDED(hr)) {
-            processBody(time, BODY_COUNT, bodies);
+            processBody(m_BodyFrameInfo.time, BODY_COUNT, bodies);
         }
     }
+
     return hr;
 }
 
@@ -682,26 +696,6 @@ HRESULT KinectHandler::updateIRFrameData(IRFrameInfo &irFrameInfo, IInfraredFram
     return hr;
 }
 
-PointF KinectHandler::mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint)
-{
-    // Calculate the body's position on the screen
-    PointF screenPos = {0, 0};
-    ColorSpacePoint colorPoint = {0, 0};
-
-    if (m_CoordinateMapper) {
-        m_CoordinateMapper->MapCameraPointToColorSpace(bodyPoint, &colorPoint);
-        screenPos.X = colorPoint.X;
-        screenPos.Y = colorPoint.Y;
-    }
-
-    return screenPos;
-}
-
-const UINT64 &KinectHandler::getClosestBodyID() const
-{
-    return m_ClosestBodyID;
-}
-
 void KinectHandler::setClosestBodyOffset(const float &offset)
 {
     m_ClosestBodyOffset = offset;
@@ -719,56 +713,61 @@ unsigned int KinectHandler::getDesiredBodyCount() const
 
 void KinectHandler::setDesiredBodyCount(unsigned int desiredBodyCount)
 {
-    m_DesiredBodyCount = desiredBodyCount > 6 ? 6 :
+    m_DesiredBodyCount = desiredBodyCount > BODY_COUNT ? BODY_COUNT :
                          (desiredBodyCount == 0 ? 1 : desiredBodyCount);
+}
+
+const UINT64 &KinectHandler::getClosestBodyID() const
+{
+    return m_ClosestBodyID;
 }
 
 void KinectHandler::setIRSourceValueMax(float maxVal)
 {
-    m_IRInfo.sourceValueMaximum = maxVal;
+    m_IRFrameInfo.sourceValueMaximum = maxVal;
 }
 
 float KinectHandler::getIRSourceValueMax() const
 {
-    return m_IRInfo.sourceValueMaximum;
+    return m_IRFrameInfo.sourceValueMaximum;
 }
 
 void KinectHandler::setIROutputValueMin(float minVal)
 {
-    m_IRInfo.outputValueMinimum = minVal;
+    m_IRFrameInfo.outputValueMinimum = minVal;
 }
 
 float KinectHandler::getIROutputValueMin() const
 {
-    return m_IRInfo.outputValueMinimum;
+    return m_IRFrameInfo.outputValueMinimum;
 }
 
 void KinectHandler::setIROutputValueMax(float maxVal)
 {
-    m_IRInfo.outputValueMaximum = maxVal;
+    m_IRFrameInfo.outputValueMaximum = maxVal;
 }
 
 float KinectHandler::getIROutputValueMax() const
 {
-    return m_IRInfo.outputValueMaximum;
+    return m_IRFrameInfo.outputValueMaximum;
 }
 
 void KinectHandler::setIRSceneValueAvg(float avgVal)
 {
-    m_IRInfo.sceneValueAverage = avgVal;
+    m_IRFrameInfo.sceneValueAverage = avgVal;
 }
 
 float KinectHandler::getIRSceneValueAvg() const
 {
-    return m_IRInfo.sceneValueAverage;
+    return m_IRFrameInfo.sceneValueAverage;
 }
 
 void KinectHandler::setIRSceneStandartDeviations(float deviation)
 {
-    m_IRInfo.sceneStandardDeviations = deviation;
+    m_IRFrameInfo.sceneStandardDeviations = deviation;
 }
 
 float KinectHandler::getIRSceneStandartDeviations() const
 {
-    return m_IRInfo.sceneStandardDeviations;
+    return m_IRFrameInfo.sceneStandardDeviations;
 }

@@ -6,12 +6,20 @@ class KinectHandler
 {
 public:
     /**
-     * @brief This is called when the takeSanpshot() method is called. Take the data and run the function you want
-     * in OpenGL thread
-     * Parameters are, in order, color data, data lenghts, color width, color height, bits per pixel, file path
+     * @brief This is called when the takeSanpshot() method is called and the color data is available.
+     * This requires color stream. Take the data and run the function you want in OpenGL thread.
+     * @param colorData
+     * @param dataLength
+     * @param width
+     * @param height
+     * @param bitsPerPixel
      */
-    std::function<void(const unsigned char *, const unsigned int &, const unsigned int &, const unsigned int &, const unsigned int &, const std::string &)>
-    m_TakeScreenshotFunc;
+    std::function<void(const unsigned char *colorData,
+                       const unsigned int &dataLength,
+                       const unsigned int &width,
+                       const unsigned int &height,
+                       const unsigned int &bitsPerPixel,
+                       const std::string &)> m_TakeScreenshotFunc;
 
     /**
      * @brief Bodies are provided in a sorted way. Bodies are sorted from left to right on the X-axis. Take the data and run the function you want
@@ -19,7 +27,6 @@ public:
      * Parameters are body, sensor time, visible body count, index.
      */
     std::function<void(const std::array<IBody *, BODY_COUNT>&, UINT64)> m_ProcessBodyFunc;
-    std::function<void()> m_ResetBodyFunc;
 
     static const unsigned int BITS_PER_PIXEL_COLOR = sizeof(RGBQUAD) * 8;
     static const unsigned int COLOR_WIDTH = 1920;
@@ -44,6 +51,8 @@ public:
 public:
     KinectHandler();
     ~KinectHandler();
+
+    /** Sensor Functions **/
 
     /**
      * @brief Use bitmasking to initizlize more than one source.
@@ -71,6 +80,10 @@ public:
 
     ICoordinateMapper *getCoordinateMapper() const;
 
+    PointF mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint);
+
+    /** Stream Getters **/
+
     const unsigned char *getColorData() const;
     bool isColorDataAvailable() const;
 
@@ -83,9 +96,7 @@ public:
     const unsigned short *getIRData() const;
     bool isIRDataAvailable() const;
 
-    PointF mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint);
-
-    const UINT64 &getClosestBodyID() const;
+    /** Body Detection Parameters **/
 
     /**
      * @brief Any skeleton that is behind the closest skeleton by this offset is deleted. If it equals to -1 this removing is not done.
@@ -96,6 +107,10 @@ public:
 
     unsigned int getDesiredBodyCount() const;
     void setDesiredBodyCount(unsigned int desiredBodyCount);
+
+    const UINT64 &getClosestBodyID() const;
+
+    /** IR Properties **/
 
     void setIRSourceValueMax(float maxVal);
     float getIRSourceValueMax() const;
@@ -135,8 +150,6 @@ private:
     ICoordinateMapper *m_CoordinateMapper;
 
     FrameSourceTypes m_InitType;
-    Vector4 m_FloorClipPlane;
-    WAITABLE_HANDLE m_FrameArrivedHandle;
 
     std::thread m_ThreadUpdate, m_ThreadScreenshot;
     std::recursive_mutex m_Mutex;
@@ -158,10 +171,11 @@ private:
      */
     unsigned int m_DesiredBodyCount;
 
-    DepthFrameInfo m_DepthInfo;
+    DepthFrameInfo m_DepthFrameInfo;
     ColorFrameInfo m_ColorFrameInfo;
-    BodyIndexInfo m_BodyIndexInfo;
-    IRFrameInfo m_IRInfo;
+    BodyIndexFrameInfo m_BodyIndexFrameInfo;
+    IRFrameInfo m_IRFrameInfo;
+    BodyFrameInfo m_BodyFrameInfo;
 
 private:
     /**
@@ -175,12 +189,12 @@ private:
      * @param bodyCount
      * @param bodies
      */
-    void processBody(UINT64 delta, int bodyCount, IBody **bodies);
+    void processBody(const UINT64 &delta, const int &bodyCount, IBody **bodies);
     void processDesiredBodyCount(std::array<IBody *, BODY_COUNT> &visibleBodies);
 
     HRESULT updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFrame *depthFrame);
     HRESULT updateColorFrameData(ColorFrameInfo &colorFrameInfo, IColorFrame *colorFrame);
-    HRESULT updateBodyIndexFrameData(BodyIndexInfo &bodyIndexInfo, IBodyIndexFrame *bodyIndexFrame);
+    HRESULT updateBodyIndexFrameData(BodyIndexFrameInfo &bodyIndexInfo, IBodyIndexFrame *bodyIndexFrame);
     HRESULT updateBodyFrame(IBodyFrame *bodyFrame);
     HRESULT updateIRFrameData(IRFrameInfo &irFrameInfo, IInfraredFrame *irFrame);
 };

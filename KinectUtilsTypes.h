@@ -47,7 +47,7 @@ struct DepthFrameInfo {
         }
     }
 
-    INT64 depthTime = 0;
+    INT64 time = 0;
     IFrameDescription *frameDescription = nullptr;
     int width = 0;
     int height = 0;
@@ -67,6 +67,7 @@ struct ColorFrameInfo {
         }
     }
 
+    INT64 time = 0;
     IFrameDescription *frameDescription = nullptr;
     int width = 0;
     int height = 0;
@@ -75,8 +76,8 @@ struct ColorFrameInfo {
     RGBQUAD *bufferRGBX = nullptr;
 };
 
-struct BodyIndexInfo {
-    ~BodyIndexInfo()
+struct BodyIndexFrameInfo {
+    ~BodyIndexFrameInfo()
     {
         safeRelease(frameDescription);
         if (buffer) {
@@ -85,13 +86,18 @@ struct BodyIndexInfo {
         }
     }
 
-    INT64 bodyIndexTime = 0;
+    INT64 time = 0;
     IFrameDescription *frameDescription = nullptr;
     int width = 0;
     int height = 0;
     UINT bufferSize = 0;
     UINT8 *buffer = nullptr;
     RGBTRIPLE *bufferRGB = nullptr;
+};
+
+struct BodyFrameInfo {
+    INT64 time = 0;
+    Vector4 floorClipPlane;
 };
 
 struct IRFrameInfo {
