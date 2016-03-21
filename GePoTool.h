@@ -13,6 +13,7 @@ class GePoTool
 {
 public:
     std::function<void(const BodyIndex &)> onBodyLost, onBodyFound;
+
     const static int INVALID_ANGLE = -720;
     const static UID INVALID_UID = 0;
 
@@ -40,34 +41,6 @@ public:
      */
     UID getUID();
 
-    /**
-     * @brief Adds a detector function, If the function is valid returns true otherwise returns false and doesn't add the function
-     * @param detectFunc
-     * @return
-     */
-    template<class DetectorClass>
-    DetectorClass *addDetector(const BodyIndex &player, const UID &customID = 0)
-    {
-        DetectorClass *detector = new(std::nothrow) DetectorClass(*this, customID);
-        if (detector) {
-            detector->setBodyIndex(player);
-            m_Detectors.push_back(detector);
-            return detector;
-        }
-        return nullptr;
-    }
-
-    template<class DetectorClass>
-    DetectorClass *getDetector(const UID &detectorID)
-    {
-        for (auto detector : m_Detectors) {
-            if (detector->getUniqueID() == detectorID) {
-                return dynamic_cast<DetectorClass *>(detector);
-            }
-        }
-        return nullptr;
-    }
-
     DGestureBase *getDetector(const UID &detectorID);
 
     bool removeDetector(DGestureBase *detector);
@@ -75,20 +48,21 @@ public:
     KinectHandler &getKinectHandler();
     IBody *getBody(const BodyIndex &player);
     IBody *getBodyWithTrackingID(const UINT64 &trackingID);
+
     /**
      * @brief If no body is found, returns -1
      * @param trackingID
      * @return
      */
     int getBodyIndexWithTrackingID(const UINT64 &trackingID);
-    UINT64 getTrackingID(IBody *body);
+    UINT64 getTrackingID(IBody *body) const;
 
     /**
      * @brief Returns a pair containing the bool value whether the hand is closed or not.
      * @param body
      * @return std::pair<bool, bool> - First is left hand, second is right hand
      */
-    std::pair<HandState, HandState> getHandStates(IBody *body);
+    std::pair<HandState, HandState> getHandStates(IBody *body) const;
 
     /**
      * @brief 0 is the natural state. When X is 1 the player is leaning all the way to the right, if -1 the player is leaning all the way to the left.
@@ -140,28 +114,28 @@ public:
      * @param body
      * @return
      */
-    BodyRect getBodyRect(IBody *body);
+    BodyRect getBodyRect(IBody *body) const;
 
     /**
      * @brief Returns a bounding box whose origin is on the top left corner.
      * @param body
      * @return
      */
-    BodyRect getHeadRect(IBody *body);
+    BodyRect getHeadRect(IBody *body) const;
 
     float toDegree(const float &radian) const;
     float toRadian(const float &degree) const;
 
-    Vector4 getJointOrientation(IBody *body, JointType joint);
-    CameraSpacePoint getJointPosition(IBody *body, JointType joint);
-    float getAngleBetweenTwoPoints(const CameraSpacePoint &pointOne, const CameraSpacePoint &pointTwo);
+    Vector4 getJointOrientation(IBody *body, JointType joint) const;
+    CameraSpacePoint getJointPosition(IBody *body, JointType joint) const;
+    float getAngleBetweenTwoPoints(const CameraSpacePoint &pointOne, const CameraSpacePoint &pointTwo) const;
 
     /**
      * @brief Active hand is the one above the other
      * @param joints
      * @return
      */
-    JointType getActiveHand(Joint *joints);
+    JointType getActiveHand(Joint *joints) const;
 
     /**
      * @brief Returns the closest body on Z-axis
@@ -180,19 +154,48 @@ public:
      * @return
      */
     bool isBodyRestricted(IBody *body) const;
+    bool isBodyTracked(IBody *body) const;
 
     template<class Point3D>
-    float getDistanceBetweenPoints(const Point3D &pointOne, const Point3D &pointTwo)
+    float getDistanceBetweenPoints(const Point3D &pointOne, const Point3D &pointTwo) const
     {
         return std::sqrtf(std::powf((pointTwo.X - pointOne.X), 2) + std::powf((pointTwo.Y - pointOne.Y), 2) + std::powf((pointTwo.Z - pointOne.Z), 2));
     }
 
+    /**
+     * @brief Adds a detector function, If the function is valid returns true otherwise returns false and doesn't add the function
+     * @param detectFunc
+     * @return
+     */
+    template<class DetectorClass>
+    DetectorClass *addDetector(const BodyIndex &player, const UID &customID = 0)
+    {
+        DetectorClass *detector = new(std::nothrow) DetectorClass(*this, customID);
+        if (detector) {
+            detector->setBodyIndex(player);
+            m_Detectors.push_back(detector);
+            return detector;
+        }
+        return nullptr;
+    }
+
+    template<class DetectorClass>
+    DetectorClass *getDetector(const UID &detectorID)
+    {
+        for (auto detector : m_Detectors) {
+            if (detector->getUniqueID() == detectorID) {
+                return dynamic_cast<DetectorClass *>(detector);
+            }
+        }
+        return nullptr;
+    }
 
 private:
     KinectHandler *m_KinectHandler;
     UINT64 m_SensorTime;
     std::array<IBody *, BODY_COUNT> m_Bodies;
     std::vector<unsigned int> m_UIDs;
+
     /**
      * @brief m_DetectionFuncs - A detection function must take an IBody and a delta time. If a function succeeds, it returns the ID to the class it belongs.
      * Otherwise, it returns INVALID_UID
@@ -201,9 +204,8 @@ private:
 
 private:
     void processBody(const std::array<IBody *, BODY_COUNT> &bodyArray, UINT64 sensorTime);
-    void bodyNotificitons(const std::array<IBody *, BODY_COUNT> &bodyArray);
+    void processBodyNotificitons(const std::array<IBody *, BODY_COUNT> &bodyArray);
     void resetBodies();
-    bool isBodyTracked(IBody *body) const;
 };
 
 #endif // GEPOTOOL_H

@@ -7,6 +7,7 @@ GePoTool::GePoTool(const unsigned int &sensorIniteType)
     , m_SensorTime(0)
 {
     std::fill(m_Bodies.begin(), m_Bodies.end(), nullptr);
+
     m_KinectHandler->initializeDefaultSensor(sensorIniteType);
     m_KinectHandler->m_ProcessBodyFunc = std::bind(&GePoTool::processBody, this, std::placeholders::_1, std::placeholders::_2);
 }
@@ -23,12 +24,12 @@ GePoTool::~GePoTool()
 void GePoTool::processBody(const std::array<IBody *, BODY_COUNT> &bodyArray, UINT64 sensorTime)
 {
     m_SensorTime = sensorTime;
-    bodyNotificitons(bodyArray);
+    processBodyNotificitons(bodyArray);
     //Copy the new skeletons
     m_Bodies = bodyArray;
 }
 
-void GePoTool::bodyNotificitons(const std::array<IBody *, BODY_COUNT> &bodyArray)
+void GePoTool::processBodyNotificitons(const std::array<IBody *, BODY_COUNT> &bodyArray)
 {
     auto countVisible = [](IBody * b) {
         return b != nullptr;
@@ -130,6 +131,7 @@ bool GePoTool::removeDetector(DGestureBase *detector)
             break;
         }
     }
+
     if (indexToRemove > -1) {
         m_Detectors.erase(m_Detectors.begin() + indexToRemove);
         delete detector;
@@ -192,17 +194,7 @@ void GePoTool::resetBodies()
     std::fill(m_Bodies.begin(), m_Bodies.end(), nullptr);
 }
 
-bool GePoTool::isBodyTracked(IBody *body) const
-{
-    if (body) {
-        BOOLEAN isTracked = 0;
-        body->get_IsTracked(&isTracked);
-        return isTracked == 1;
-    }
-    return false;
-}
-
-UINT64 GePoTool::getTrackingID(IBody *body)
+UINT64 GePoTool::getTrackingID(IBody *body) const
 {
     if (!body) {
         return 0;
@@ -213,11 +205,12 @@ UINT64 GePoTool::getTrackingID(IBody *body)
     return trackingID;
 }
 
-std::pair<HandState, HandState> GePoTool::getHandStates(IBody *body)
+std::pair<HandState, HandState> GePoTool::getHandStates(IBody *body) const
 {
     if (!body) {
         return std::make_pair(HandState_Unknown, HandState_Unknown);
     }
+
     if (isBodyTracked(body) == false) {
         return std::make_pair(HandState_Unknown, HandState_Unknown);
     }
@@ -227,18 +220,20 @@ std::pair<HandState, HandState> GePoTool::getHandStates(IBody *body)
 
     body->get_HandLeftState(&leftHandState);
     body->get_HandRightState(&rightHandState);
+
     return std::make_pair(leftHandState, rightHandState);
 }
 
 PointF GePoTool::getLeanAmount(IBody *body) const
 {
     if (!body || isBodyTracked(body) == false) {
-        PointF invalidLean{0};
+        PointF invalidLean = {0, 0};
         return invalidLean;
     }
 
-    PointF leanAmount = {0};
+    PointF leanAmount = {0, 0};
     body->get_Lean(&leanAmount);
+
     return leanAmount;
 }
 
@@ -291,6 +286,7 @@ float GePoTool::getAngleBetweenHands(IBody *body) const
     if (leftHand.Y < rightHand.Y) {
         angle *= -1;
     }
+
     return angle;
 }
 
@@ -306,7 +302,7 @@ std::vector<UID> GePoTool::pollGestures(const BodyIndex &bodyIndex, const float 
         return detectedGestures;
     }
 
-    for (auto detector : m_Detectors) {
+    for (DGestureBase *detector : m_Detectors) {
         if (detector) {
             //If the detector already is set to a body index, and the given body inex does not eqaul to it skip the detector.
             if (detector->getBodyIndex() > DGestureBase::INVALID_BODY_INDEX && detector->getBodyIndex() != bodyIndex) {
@@ -323,6 +319,7 @@ std::vector<UID> GePoTool::pollGestures(const BodyIndex &bodyIndex, const float 
         //Sort in ascending order
         std::sort(detectedGestures.begin(), detectedGestures.end());
     }
+
     return detectedGestures;
 }
 
@@ -338,7 +335,7 @@ UID GePoTool::determinePlayerPosture(const BodyIndex &bodyIndex, const float &de
     }
 
     UID detectedGesture = GePoTool::INVALID_UID;
-    for (auto detector : m_Detectors) {
+    for (DGestureBase *detector : m_Detectors) {
         if (detector) {
             //If the detector already is set to a body index, and the given body inex does not eqaul to it skip the detector.
             if (detector->getBodyIndex() > DGestureBase::INVALID_BODY_INDEX && detector->getBodyIndex() != bodyIndex) {
@@ -352,6 +349,7 @@ UID GePoTool::determinePlayerPosture(const BodyIndex &bodyIndex, const float &de
             }
         }
     }
+
     return detectedGesture;
 }
 
@@ -364,7 +362,7 @@ std::size_t GePoTool::getDetectedBodyCount() const
     return std::count_if(m_Bodies.begin(), m_Bodies.end(), countVisible);
 }
 
-GePoTool::BodyRect GePoTool::getBodyRect(IBody *body)
+GePoTool::BodyRect GePoTool::getBodyRect(IBody *body) const
 {
     if (!body) {
         return BodyRect();
@@ -430,13 +428,15 @@ GePoTool::BodyRect GePoTool::getBodyRect(IBody *body)
             else if (rect.x < 0) {
                 rect.x = 1;
             }
+
             return rect;
         }
     }
+
     return BodyRect();
 }
 
-GePoTool::BodyRect GePoTool::getHeadRect(IBody *body)
+GePoTool::BodyRect GePoTool::getHeadRect(IBody *body) const
 {
     if (!body) {
         return BodyRect();
@@ -485,22 +485,24 @@ GePoTool::BodyRect GePoTool::getHeadRect(IBody *body)
         }
         rect.width = shoulderLenght;
         rect.height = shoulderLenght;
+
         return rect;
     }
+
     return BodyRect();
 }
 
 float GePoTool::toDegree(const float &radian) const
 {
-    return (radian * 180) / 3.14158265f;
+    return (radian * 180.f) / 3.14158265f;
 }
 
 float GePoTool::toRadian(const float &degree) const
 {
-    return (degree * 3.14159265f) / 180;
+    return (degree * 3.14159265f) / 180.f;
 }
 
-Vector4 GePoTool::getJointOrientation(IBody *body, JointType joint)
+Vector4 GePoTool::getJointOrientation(IBody *body, JointType joint) const
 {
     if (!body) {
         return Vector4();
@@ -511,7 +513,7 @@ Vector4 GePoTool::getJointOrientation(IBody *body, JointType joint)
     return joints[joint].Orientation;
 }
 
-CameraSpacePoint GePoTool::getJointPosition(IBody *body, JointType joint)
+CameraSpacePoint GePoTool::getJointPosition(IBody *body, JointType joint) const
 {
     CameraSpacePoint position = {0, 0, 0};
     if (!body) {
@@ -526,22 +528,24 @@ CameraSpacePoint GePoTool::getJointPosition(IBody *body, JointType joint)
     return position;
 }
 
-float GePoTool::getAngleBetweenTwoPoints(const CameraSpacePoint &pointOne, const CameraSpacePoint &pointTwo)
+float GePoTool::getAngleBetweenTwoPoints(const CameraSpacePoint &pointOne, const CameraSpacePoint &pointTwo) const
 {
-    float x = 0, h = getDistanceBetweenPoints(pointOne, pointTwo);
-    x = std::abs(pointOne.X - pointTwo.X);
+    const float x = std::abs(pointOne.X - pointTwo.X),
+                h = getDistanceBetweenPoints(pointOne, pointTwo);
+
     float angle = toDegree(acosf(x / h));
     //Without the following process, angle would only give results between 0 and 180. With this, we convert that to a 360 degree.
     if (pointOne.Y < pointTwo.Y) {
         angle *= -1;
     }
     if (pointOne.X > pointTwo.X) {
-        angle = 180 - angle;
+        angle = 180.f - angle;
     }
+
     return angle;
 }
 
-JointType GePoTool::getActiveHand(Joint *joints)
+JointType GePoTool::getActiveHand(Joint *joints) const
 {
     JointType joint = JointType_Count;
     //Set the higher hand as the active one
@@ -574,6 +578,17 @@ bool GePoTool::isBodyRestricted(IBody *body) const
     HRESULT hr = body->get_IsRestricted(&isRestricted);
     if (SUCCEEDED(hr)) {
         return isRestricted == 1;
+    }
+
+    return false;
+}
+
+bool GePoTool::isBodyTracked(IBody *body) const
+{
+    if (body) {
+        BOOLEAN isTracked = 0;
+        body->get_IsTracked(&isTracked);
+        return isTracked == 1;
     }
 
     return false;
