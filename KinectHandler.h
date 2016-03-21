@@ -1,6 +1,6 @@
 #ifndef KINECTHANDLER_H
 #define KINECTHANDLER_H
-#include "KinectUtilTypes.h"
+#include "KinectUtilsTypes.h"
 
 class KinectHandler
 {
