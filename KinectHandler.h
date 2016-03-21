@@ -22,7 +22,6 @@ public:
     std::function<void()> m_ResetBodyFunc;
 
     static const unsigned int BITS_PER_PIXEL_COLOR = sizeof(RGBQUAD) * 8;
-
     static const unsigned int COLOR_WIDTH = 1920;
     static const unsigned int COLOR_HEIGHT = 1080;
     static const unsigned int DATA_LENGTH_COLOR = COLOR_WIDTH * COLOR_HEIGHT * (BITS_PER_PIXEL_COLOR / 8);
