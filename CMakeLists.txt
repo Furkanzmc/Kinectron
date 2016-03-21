@@ -59,7 +59,7 @@ if(KINECT_ENABLED)
     GePoTool.h
     Detectors/GestureDetectorBase.h
     SkeletonSmoother.h
-    KinectUtilTypes.h
+    KinectUtilsTypes.h
   )
 
 #Append Gesture Detectors
