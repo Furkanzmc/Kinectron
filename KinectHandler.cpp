@@ -156,7 +156,12 @@ PointF KinectHandler::mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoin
 
 const unsigned char *KinectHandler::getColorData() const
 {
-    return reinterpret_cast<unsigned char *>(m_ColorFrameInfo.bufferRGBX);;
+    return reinterpret_cast<unsigned char *>(m_ColorFrameInfo.bufferRGBX);
+}
+
+const RGBQUAD *KinectHandler::getColorDataRGB() const
+{
+    return m_ColorFrameInfo.bufferRGBX;
 }
 
 bool KinectHandler::isColorDataAvailable() const

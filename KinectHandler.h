@@ -85,6 +85,7 @@ public:
     /** Stream Getters **/
 
     const unsigned char *getColorData() const;
+    const RGBQUAD *getColorDataRGB() const;
     bool isColorDataAvailable() const;
 
     const unsigned short *getDepthData() const;
