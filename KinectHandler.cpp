@@ -110,7 +110,8 @@ const Vector4 &KinectHandler::getFloorClipPlane()
 bool KinectHandler::isFloorVisible() const
 {
     bool floor = false;
-    if (m_BodyFrameInfo.floorClipPlane.x != 0 && m_BodyFrameInfo.floorClipPlane.y != 0 && m_BodyFrameInfo.floorClipPlane.z != 0 && m_BodyFrameInfo.floorClipPlane.w != 0) {
+    if (m_BodyFrameInfo.floorClipPlane.x != 0 && m_BodyFrameInfo.floorClipPlane.y != 0 && m_BodyFrameInfo.floorClipPlane.z != 0
+        && m_BodyFrameInfo.floorClipPlane.w != 0) {
         floor = true;
     }
 
