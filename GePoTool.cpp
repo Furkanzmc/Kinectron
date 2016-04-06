@@ -25,7 +25,7 @@ void GePoTool::processBody(const std::array<IBody *, BODY_COUNT> &bodyArray, UIN
 {
     m_SensorTime = sensorTime;
     processBodyNotificitons(bodyArray);
-    //Copy the new skeletons
+    // Copy the new skeletons
     m_Bodies = bodyArray;
 }
 
@@ -48,7 +48,7 @@ void GePoTool::processBodyNotificitons(const std::array<IBody *, BODY_COUNT> &bo
         }
         return;
     }
-    //If the m_Bodies is empty, copy the new vector and call the body found functions
+    // If the m_Bodies is empty, copy the new vector and call the body found functions
     else if (previousBodyCount == 0) {
         for (unsigned int i = 0; i < newBodyCount; i++) {
             if (onBodyFound) {
@@ -57,7 +57,7 @@ void GePoTool::processBodyNotificitons(const std::array<IBody *, BODY_COUNT> &bo
         }
         return;
     }
-    //If there are already items, and new bodyCount is bigger than the m_Bodies then new players joined.
+    // If there are already items, and new bodyCount is bigger than the m_Bodies then new players joined.
     else if (newBodyCount > previousBodyCount) {
         for (std::size_t i = previousBodyCount - 1; i < newBodyCount; i++) {
             if (onBodyFound) {
@@ -81,11 +81,11 @@ void GePoTool::processBodyNotificitons(const std::array<IBody *, BODY_COUNT> &bo
 
                 if (getTrackingID(m_Bodies.at(oldBodyIndex)) == getTrackingID(bodyArray.at(newBodyIndex))) {
                     isBodyAlreadyExist = true;
-                    //Yeap, he's ok.
+                    // Yeap, he's ok.
                     break;
                 }
             }
-            //If the body does not exist, it can only mean one thing... INFIDEL!!!
+            // If the body does not exist, it can only mean one thing... INFIDEL!!!
             if (isBodyAlreadyExist == false) {
                 if (onBodyLost) {
                     onBodyLost(oldBodyIndex);
@@ -114,6 +114,7 @@ DGestureBase *GePoTool::getDetector(const UID &detectorID)
             return detector;
         }
     }
+
     return nullptr;
 }
 
@@ -138,6 +139,7 @@ bool GePoTool::removeDetector(DGestureBase *detector)
         detector = nullptr;
         return true;
     }
+
     return false;
 }
 
@@ -201,8 +203,12 @@ UINT64 GePoTool::getTrackingID(IBody *body) const
     }
 
     UINT64 trackingID = 0;
-    body->get_TrackingId(&trackingID);
-    return trackingID;
+    HRESULT hr = body->get_TrackingId(&trackingID);
+    if (SUCCEEDED(hr)) {
+        return trackingID;
+    }
+
+    return 0;
 }
 
 std::pair<HandState, HandState> GePoTool::getHandStates(IBody *body) const
@@ -270,7 +276,7 @@ float GePoTool::getAngleBetweenHands(IBody *body) const
         return static_cast<float>(INVALID_ANGLE);
     }
 
-    //x -> Distance on x axis, y -> distance on y axis, h -> hypotenuse
+    // x -> Distance on x axis, y -> distance on y axis, h -> hypotenuse
     float x = 0, y = 0, h = 0;
     if (leftHand.X < 0 && rightHand.X < 0 || leftHand.X > 0 && rightHand.X > 0) {
         x = std::abs(leftHand.X - rightHand.X);
@@ -282,7 +288,7 @@ float GePoTool::getAngleBetweenHands(IBody *body) const
     y = std::abs(leftHand.Y - rightHand.Y);
     h = std::sqrtf(std::powf(leftHand.X - rightHand.X, 2) + std::powf(leftHand.Y - rightHand.Y, 2));
     const float radian = std::asinf(y / h);
-    float angle = (radian * 180) / 3.14159265f;//Convert to degrees
+    float angle = (radian * 180) / 3.14159265f;// Convert to degrees
     if (leftHand.Y < rightHand.Y) {
         angle *= -1;
     }
@@ -304,7 +310,7 @@ std::vector<UID> GePoTool::pollGestures(const BodyIndex &bodyIndex, const float 
 
     for (DGestureBase *detector : m_Detectors) {
         if (detector) {
-            //If the detector already is set to a body index, and the given body inex does not eqaul to it skip the detector.
+            // If the detector already is set to a body index, and the given body inex does not eqaul to it skip the detector.
             if (detector->getBodyIndex() > DGestureBase::INVALID_BODY_INDEX && detector->getBodyIndex() != bodyIndex) {
                 continue;
             }
@@ -316,7 +322,7 @@ std::vector<UID> GePoTool::pollGestures(const BodyIndex &bodyIndex, const float 
         }
     }
     if (detectedGestures.size() > 1) {
-        //Sort in ascending order
+        // Sort in ascending order
         std::sort(detectedGestures.begin(), detectedGestures.end());
     }
 
@@ -337,7 +343,7 @@ UID GePoTool::determinePlayerPosture(const BodyIndex &bodyIndex, const float &de
     UID detectedGesture = GePoTool::INVALID_UID;
     for (DGestureBase *detector : m_Detectors) {
         if (detector) {
-            //If the detector already is set to a body index, and the given body inex does not eqaul to it skip the detector.
+            // If the detector already is set to a body index, and the given body inex does not eqaul to it skip the detector.
             if (detector->getBodyIndex() > DGestureBase::INVALID_BODY_INDEX && detector->getBodyIndex() != bodyIndex) {
                 continue;
             }
@@ -394,7 +400,7 @@ GePoTool::BodyRect GePoTool::getBodyRect(IBody *body) const
         cameraPoints[shoulderRightIndex] = joints[JointType_ShoulderRight].Position;
         cameraPoints[shoulderLeftIndex] = joints[JointType_ShoulderLeft].Position;
 
-        //This is mapped for 1920x1080 resolution
+        // This is mapped for 1920x1080 resolution
         hr = m_KinectHandler->getCoordinateMapper()->MapCameraPointsToColorSpace(_countof(cameraPoints), cameraPoints, _countof(colorPoints), colorPoints);
         if (SUCCEEDED(hr)) {
             const float shoulderLenght = std::abs(colorPoints[shoulderLeftIndex].X - colorPoints[shoulderRightIndex].X) * 1.2f;
@@ -414,7 +420,7 @@ GePoTool::BodyRect GePoTool::getBodyRect(IBody *body) const
             rect.width = maxWidth;
             rect.height = maxHeight;
 
-            //Contain the rect within the color size
+            // Contain the rect within the color size
             if (rect.y < 0) {
                 rect.y = 1;
             }
@@ -456,7 +462,7 @@ GePoTool::BodyRect GePoTool::getHeadRect(IBody *body) const
 
         std::array<PointF, 3> colorPoints = {0, 0, 0};
         std::array<CameraSpacePoint, 3> cameraPoints = {0, 0, 0};
-        //This is mapped for 1920x1080 resolution
+        // This is mapped for 1920x1080 resolution
         cameraPoints[headIndex] = joints[JointType_Head].Position;
         cameraPoints[shoulderRightIndex] = joints[JointType_ShoulderRight].Position;
         cameraPoints[shoulderLeftIndex] = joints[JointType_ShoulderLeft].Position;
@@ -530,11 +536,11 @@ CameraSpacePoint GePoTool::getJointPosition(IBody *body, JointType joint) const
 
 float GePoTool::getAngleBetweenTwoPoints(const CameraSpacePoint &pointOne, const CameraSpacePoint &pointTwo) const
 {
-    const float x = std::abs(pointOne.X - pointTwo.X),
-                h = getDistanceBetweenPoints(pointOne, pointTwo);
+    const float x = std::abs(pointOne.X - pointTwo.X);
+    const float h = getDistanceBetweenPoints(pointOne, pointTwo);
 
     float angle = toDegree(acosf(x / h));
-    //Without the following process, angle would only give results between 0 and 180. With this, we convert that to a 360 degree.
+    // Without the following process, angle would only give results between 0 and 180. With this, we convert that to a 360 degree.
     if (pointOne.Y < pointTwo.Y) {
         angle *= -1;
     }
@@ -548,7 +554,7 @@ float GePoTool::getAngleBetweenTwoPoints(const CameraSpacePoint &pointOne, const
 JointType GePoTool::getActiveHand(Joint *joints) const
 {
     JointType joint = JointType_Count;
-    //Set the higher hand as the active one
+    // Set the higher hand as the active one
     if (joints[JointType_HandLeft].Position.Y > joints[JointType_HandRight].Position.Y) {
         joint = JointType_HandLeft;
     }

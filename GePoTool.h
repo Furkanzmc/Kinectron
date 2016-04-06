@@ -12,11 +12,6 @@ class KinectHandler;
 class GePoTool
 {
 public:
-    std::function<void(const BodyIndex &)> onBodyLost, onBodyFound;
-
-    const static int INVALID_ANGLE = -720;
-    const static UID INVALID_UID = 0;
-
     struct BodyRect {
         float x = 0, y = 0, width = 0, height = 0;
     };
@@ -30,6 +25,11 @@ public:
         SIX
     };
 
+    std::function<void(const BodyIndex &)> onBodyLost, onBodyFound;
+
+    const static int INVALID_ANGLE = -720;
+    const static UID INVALID_UID = 0;
+
 public:
     GePoTool(const unsigned int &sensorIniteType);
     ~GePoTool();
@@ -41,12 +41,34 @@ public:
      */
     UID getUID();
 
+    /**
+     * @brief Returns the detector with the given ID, if it doesn't exist returns nullptr
+     * @param detectorID
+     * @return
+     */
     DGestureBase *getDetector(const UID &detectorID);
 
+    /**
+     * @brief Removes the given detector, if the operation is succesfull returns true. If it's not, returns false
+     * @param detector
+     * @return
+     */
     bool removeDetector(DGestureBase *detector);
 
     KinectHandler &getKinectHandler();
+
+    /**
+     * @brief Returns the body with the given index. If the index is invalid returns nullptr
+     * @param player
+     * @return
+     */
     IBody *getBody(const BodyIndex &player);
+
+    /**
+     * @brief Returns the body with the given tracking id, If the id cannot be found returns nullptr
+     * @param trackingID
+     * @return
+     */
     IBody *getBodyWithTrackingID(const UINT64 &trackingID);
 
     /**
@@ -55,6 +77,12 @@ public:
      * @return
      */
     int getBodyIndexWithTrackingID(const UINT64 &trackingID);
+
+    /**
+     * @brief Returns the tracking id of the body. If the operation is not successful or the body is invalid returns 0
+     * @param body
+     * @return
+     */
     UINT64 getTrackingID(IBody *body) const;
 
     /**
@@ -107,7 +135,7 @@ public:
      * @brief Since KinectHandler only directs visible bodies to us, return the size of m_Bodies
      * @return
      */
-    size_t getDetectedBodyCount() const;
+    std::size_t getDetectedBodyCount() const;
 
     /**
      * @brief Returns a bounding box whose origin is on the top left corner.
@@ -128,6 +156,13 @@ public:
 
     Vector4 getJointOrientation(IBody *body, JointType joint) const;
     CameraSpacePoint getJointPosition(IBody *body, JointType joint) const;
+
+    /**
+     * @brief Returns the angle between two camera space points in degrees
+     * @param pointOne
+     * @param pointTwo
+     * @return
+     */
     float getAngleBetweenTwoPoints(const CameraSpacePoint &pointOne, const CameraSpacePoint &pointTwo) const;
 
     /**
