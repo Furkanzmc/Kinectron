@@ -487,6 +487,35 @@ bool KinectHandler::sortBodyCenter(IBody *bodyOne, IBody *bodyTwo) const
     return isOnLeft;
 }
 
+bool KinectHandler::sortBodyCenterAndZDesc(IBody *bodyOne, IBody *bodyTwo) const
+{
+    //FIXME: Using m_AllJoints gives mixed results
+
+    bool isOnLeft = false;
+    if (bodyOne == nullptr && bodyTwo != nullptr) {
+        return false;
+    }
+    else if (bodyOne != nullptr && bodyTwo == nullptr) {
+        return true;
+    }
+    else if (bodyOne == nullptr && bodyTwo == nullptr) {
+        return false;
+    }
+
+    Joint jointsOne[JointType_Count];
+    Joint jointsTwo[JointType_Count];
+    HRESULT hr = bodyOne->GetJoints(_countof(jointsOne), jointsOne);
+    hr = bodyTwo->GetJoints(_countof(jointsTwo), jointsTwo);
+
+    const CameraSpacePoint spineMidPosOne = jointsOne[JointType_Head].Position;
+    const CameraSpacePoint spineMidPosTwo = jointsTwo[JointType_Head].Position;
+
+    if (std::abs(spineMidPosOne.X) < std::abs(spineMidPosTwo.X) && std::abs(spineMidPosOne.Z) < std::abs(spineMidPosTwo.Z)) {
+        isOnLeft = true;
+    }
+    return isOnLeft;
+}
+
 HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFrame *depthFrame)
 {
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);

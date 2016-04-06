@@ -232,6 +232,14 @@ private:
      */
     bool sortBodyCenter(IBody *bodyOne, IBody *bodyTwo) const;
 
+    /**
+     * @brief Sorts the bodies in a way that the index 0 becomes the index closest to the sensor and the center
+     * @param bodyOne
+     * @param bodyTwo
+     * @return
+     */
+    bool sortBodyCenterAndZDesc(IBody *bodyOne, IBody *bodyTwo) const;
+
     /** Frame Update Functions **/
 
     HRESULT updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFrame *depthFrame);
