@@ -64,6 +64,10 @@ public:
     explicit SkeletonSmoother(ICoordinateMapper *coordinateMapper);
     explicit SkeletonSmoother(GePoTool *postureTool);
 
+    /**
+     * @brief Updates the body positions if the smoother was constructed with GePoTool
+     * @param delta
+     */
     void update(const float &delta);
     void updateJointPositions(const unsigned int &bodyIndex, const float &delta, Joint *joints);
     void reset(const unsigned int &bodyIndex);
