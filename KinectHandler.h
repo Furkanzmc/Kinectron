@@ -1,6 +1,7 @@
 #ifndef KINECTHANDLER_H
 #define KINECTHANDLER_H
 #include "KinectUtilsTypes.h"
+#include <map>
 
 class KinectHandler
 {
@@ -192,6 +193,8 @@ private:
     IRFrameInfo m_IRFrameInfo;
     BodyFrameInfo m_BodyFrameInfo;
 
+    std::map<UINT64, Joint *> m_AllJoints;
+
 private:
     /**
      * @brief Updates the sensor 30 times per second.
@@ -209,6 +212,7 @@ private:
     void processDesiredBodyCount(std::array<IBody *, BODY_COUNT> &visibleBodies);
 
     /** Body Sort Functions **/
+
     bool sortBodyZDesc(IBody *bodyOne, IBody *bodyTwo) const;
 
     /**
