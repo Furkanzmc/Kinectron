@@ -359,7 +359,7 @@ void KinectHandler::processClosestBodyConstraint(std::array<IBody *, BODY_COUNT>
         closestBody->get_TrackingId(&m_ClosestBodyID);
     }
 
-    // Do the calculation only if the visible body count is bigger than the desirec body count
+    // Do the calculation only if the visible body count is bigger than the desired body count
     if (m_ClosestBodyOffset > 0 && visibleBodies.size() > m_DesiredBodyCount) {
         // Remove the indexes that are not within the range, then sort the bodies from left to right again
         if (closestBody) {
