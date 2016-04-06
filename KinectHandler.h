@@ -1,6 +1,7 @@
 #ifndef KINECTHANDLER_H
 #define KINECTHANDLER_H
 #include "KinectUtilsTypes.h"
+#include <map>
 
 class KinectHandler
 {
@@ -191,6 +192,7 @@ private:
      * @param bodies
      */
     void processBody(const UINT64 &delta, const int &bodyCount, IBody **bodies);
+    void processClosestBodyConstraint(std::array<IBody *, BODY_COUNT> &visibleBodies, const std::map<UINT64, Joint *> &bodyJoints);
     void processDesiredBodyCount(std::array<IBody *, BODY_COUNT> &visibleBodies);
 
     HRESULT updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFrame *depthFrame);

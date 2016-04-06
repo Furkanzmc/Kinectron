@@ -1,5 +1,4 @@
 #include "KinectHandler.h"
-#include <iostream>
 #include <ctime>
 #include <vector>
 #include <algorithm>
@@ -305,6 +304,7 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
     HRESULT hr = E_FAIL;
     std::array<IBody *, BODY_COUNT> visibleBodies;
+    std::map<UINT64, Joint *> bodyJoints;
     std::fill(visibleBodies.begin(), visibleBodies.end(), nullptr);
 
     if (m_CoordinateMapper) {
@@ -312,16 +312,25 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
         for (int i = 0; i < bodyCount; ++i) {
             IBody *body = bodies[i];
             if (body) {
+                // Update the body joints to prevent getting the body joints multiple times
                 BOOLEAN isBodyracked = false;
                 hr = body->get_IsTracked(&isBodyracked);
                 if (SUCCEEDED(hr) && isBodyracked) {
+                    Joint joints[JointType_Count];
+                    HRESULT hr = body->GetJoints(_countof(joints), joints);
+                    if (SUCCEEDED(hr)) {
+                        UINT64 trackingID = 0;
+                        body->get_TrackingId(&trackingID);
+                        bodyJoints[trackingID] = joints;
+                    }
+
                     visibleBodies[i] = body;
                 }
             }
         }
 
         // Get the closest body index
-        auto descSortZ = [](IBody * bodyOne, IBody * bodyTwo) {
+        auto descSortZ = [bodyJoints](IBody * bodyOne, IBody * bodyTwo) {
             if (bodyOne == nullptr && bodyTwo != nullptr) {
                 return false;
             }
@@ -332,53 +341,76 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
                 return false;
             }
 
-            Joint jointsOne[JointType_Count];
-            Joint jointsTwo[JointType_Count];
-            HRESULT hr = bodyOne->GetJoints(_countof(jointsOne), jointsOne);
-            hr = bodyTwo->GetJoints(_countof(jointsTwo), jointsTwo);
+            UINT64 trackingIDOne = 0;
+            bodyOne->get_TrackingId(&trackingIDOne);
+            UINT64 trackingIDTwo = 0;
+            bodyOne->get_TrackingId(&trackingIDTwo);
+
+            Joint *jointsOne = bodyJoints.at(trackingIDOne);
+            Joint *jointsTwo = bodyJoints.at(trackingIDTwo);
+
+            if (jointsOne == nullptr && jointsTwo != nullptr) {
+                return false;
+            }
+            else if (jointsOne != nullptr && jointsTwo == nullptr) {
+                return true;
+            }
+            else if (jointsOne == nullptr && jointsTwo == nullptr) {
+                return false;
+            }
 
             const CameraSpacePoint spineMidPosOne = jointsOne[JointType_Head].Position;
             const CameraSpacePoint spineMidPosTwo = jointsTwo[JointType_Head].Position;
             return spineMidPosOne.Z < spineMidPosTwo.Z;
         };
+
         std::sort(visibleBodies.begin(), visibleBodies.end(), descSortZ);
 
-        const unsigned int closestBodyIndex = 0;
-        IBody *closestBody = visibleBodies[closestBodyIndex];
-        if (closestBody) {
-            closestBody->get_TrackingId(&m_ClosestBodyID);
-        }
-
-        if (m_ClosestBodyOffset > 0) {
-            // Remove the indexes that are not within the range, then sort the bodies from left to right again
-            if (closestBody) {
-                for (unsigned int bodyIndex = 0; bodyIndex < visibleBodies.size(); bodyIndex++) {
-                    IBody *body = visibleBodies[bodyIndex];
-                    if (!body) {
-                        continue;
-                    }
-
-                    Joint jointsOne[JointType_Count];
-                    Joint jointsClosest[JointType_Count];
-                    HRESULT hr = body->GetJoints(_countof(jointsOne), jointsOne);
-                    if (SUCCEEDED(hr)) {
-                        hr = closestBody->GetJoints(_countof(jointsClosest), jointsClosest);
-                    }
-
-                    const CameraSpacePoint spineMidPosOne = jointsOne[JointType_SpineMid].Position;
-                    const CameraSpacePoint spineMidPosClosest = jointsClosest[JointType_SpineMid].Position;
-                    const bool shouldRemove = spineMidPosOne.Z > spineMidPosClosest.Z + m_ClosestBodyOffset;
-                    if (shouldRemove) {
-                        visibleBodies[bodyIndex] = nullptr;
-                    }
-                }
-            }
-        }
-
+        processClosestBodyConstraint(visibleBodies, bodyJoints);
         processDesiredBodyCount(visibleBodies);
 
         if (m_ProcessBodyFunc) {
             m_ProcessBodyFunc(visibleBodies, delta);
+        }
+    }
+}
+
+void KinectHandler::processClosestBodyConstraint(std::array<IBody *, BODY_COUNT> &visibleBodies, const std::map<UINT64, Joint *> &bodyJoints)
+{
+    const unsigned int closestBodyIndex = 0;
+    IBody *closestBody = visibleBodies[closestBodyIndex];
+    if (closestBody) {
+        closestBody->get_TrackingId(&m_ClosestBodyID);
+    }
+
+    if (m_ClosestBodyOffset > 0) {
+        // Remove the indexes that are not within the range, then sort the bodies from left to right again
+        if (closestBody) {
+            for (unsigned int bodyIndex = 0; bodyIndex < visibleBodies.size(); bodyIndex++) {
+                IBody *body = visibleBodies[bodyIndex];
+                if (!body) {
+                    continue;
+                }
+
+                UINT64 trackingIDOne = 0;
+                body->get_TrackingId(&trackingIDOne);
+                UINT64 trackingIDClosest = 0;
+                closestBody->get_TrackingId(&trackingIDClosest);
+
+                Joint *jointsOne = bodyJoints.at(trackingIDOne);
+                Joint *jointsClosest = bodyJoints.at(trackingIDClosest);
+
+                if (jointsOne == nullptr || jointsClosest == nullptr) {
+                    continue;
+                }
+
+                const CameraSpacePoint spineMidPosOne = jointsOne[JointType_SpineMid].Position;
+                const CameraSpacePoint spineMidPosClosest = jointsClosest[JointType_SpineMid].Position;
+                const bool shouldRemove = spineMidPosOne.Z > spineMidPosClosest.Z + m_ClosestBodyOffset;
+                if (shouldRemove) {
+                    visibleBodies[bodyIndex] = nullptr;
+                }
+            }
         }
     }
 }
