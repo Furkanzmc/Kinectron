@@ -30,6 +30,11 @@ void SkeletonSmoother::update(const float &delta)
         return;
     }
 
+    // Reset the body properties that is bigger than the detected body count
+    for (std::size_t index = m_PostureTool->getDetectedBodyCount(); index < BODY_COUNT; index++) {
+        reset(index);
+    }
+
     for (int bodyIndex = 0; bodyIndex < BODY_COUNT; bodyIndex++) {
         IBody *body = m_PostureTool->getBody(bodyIndex);
         if (!body) {
