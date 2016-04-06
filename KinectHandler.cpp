@@ -24,6 +24,7 @@ KinectHandler::KinectHandler()
     , m_InitType(FrameSourceTypes_None)
     , m_ClosestBodyID(0)
     , m_ClosestBodyOffset(-1.f)
+    , m_MaxBodyDistance(0.f)
     , m_DesiredBodyCount(BODY_COUNT)
       // Frame Info
     , m_DepthFrameInfo()
@@ -314,7 +315,16 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
                 BOOLEAN isBodyracked = false;
                 hr = body->get_IsTracked(&isBodyracked);
                 if (SUCCEEDED(hr) && isBodyracked) {
-                    visibleBodies[i] = body;
+                    if (m_MaxBodyDistance > 0.f) {
+                        Joint joints[JointType_Count];
+                        hr = body->GetJoints(_countof(joints), joints);
+                        if (SUCCEEDED(hr) && joints[JointType_SpineBase].Position.Z < m_MaxBodyDistance) {
+                            visibleBodies[i] = body;
+                        }
+                    }
+                    else {
+                        visibleBodies[i] = body;
+                    }
                 }
             }
         }
@@ -729,6 +739,21 @@ void KinectHandler::setDesiredBodyCount(unsigned int desiredBodyCount)
 const UINT64 &KinectHandler::getClosestBodyID() const
 {
     return m_ClosestBodyID;
+}
+
+float KinectHandler::getMaxBodyDistance() const
+{
+    return m_MaxBodyDistance;
+}
+
+void KinectHandler::setMaxBodyDistance(float distance)
+{
+    m_MaxBodyDistance = max(0, distance);
+}
+
+void KinectHandler::resetMaxBodyDistance()
+{
+    m_MaxBodyDistance = 0.f;
 }
 
 void KinectHandler::setIRSourceValueMax(float maxVal)

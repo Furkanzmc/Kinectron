@@ -111,6 +111,15 @@ public:
 
     const UINT64 &getClosestBodyID() const;
 
+    float getMaxBodyDistance() const;
+
+    /**
+     * @brief Any skeleton that is beyond the distance is not processed.
+     * @param distance
+     */
+    void setMaxBodyDistance(float distance);
+    void resetMaxBodyDistance();
+
     /** IR Properties **/
 
     void setIRSourceValueMax(float maxVal);
@@ -160,6 +169,11 @@ private:
      * @brief Any skeleton that is behind the closest skeleton by this offset is deleted. If it equals to -1 this removing is not done.
      */
     float m_ClosestBodyOffset;
+
+    /**
+     * @brief Any skeleton that is farther from the sensor on the Z-axis than m_MaxBodyDistance will not be processed. The default value is 0.
+     */
+    float m_MaxBodyDistance;
 
     /**
      * @brief The default value is 6 (BODY_COUNT). This cannot be 0, or bigger than 6. When this is smaller than 6, KinectHandler will first rule out the bodies based on m_ClosestBodyOffset.
