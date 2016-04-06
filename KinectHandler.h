@@ -1,7 +1,6 @@
 #ifndef KINECTHANDLER_H
 #define KINECTHANDLER_H
 #include "KinectUtilsTypes.h"
-#include <map>
 
 class KinectHandler
 {
@@ -192,8 +191,30 @@ private:
      * @param bodies
      */
     void processBody(const UINT64 &delta, const int &bodyCount, IBody **bodies);
-    void processClosestBodyConstraint(std::array<IBody *, BODY_COUNT> &visibleBodies, const std::map<UINT64, Joint *> &bodyJoints);
+    void processClosestBodyConstraint(std::array<IBody *, BODY_COUNT> &visibleBodies);
     void processDesiredBodyCount(std::array<IBody *, BODY_COUNT> &visibleBodies);
+
+    /** Body Sort Functions **/
+    bool sortBodyZDesc(IBody *bodyOne, IBody *bodyTwo) const;
+
+    /**
+     * @brief Sort the bodies from left to right on the X-axis. Player one is the left-most body.
+     * @param bodyOne
+     * @param bodyTwo
+     * @return
+     */
+    bool sortBodyXAsc(IBody *bodyOne, IBody *bodyTwo) const;
+
+    /**
+     * @brief /* Use the absolute value to put the ones that are closer to zero on the left.
+     * So, visibleBodies.at(0) is the closest one to the and visibleBodies.at(visibleBodies.size() - 1) is the farthest from the center.
+     * @param bodyOne
+     * @param bodyTwo
+     * @return
+     */
+    bool sortBodyCenter(IBody *bodyOne, IBody *bodyTwo) const;
+
+    /** Frame Update Functions **/
 
     HRESULT updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFrame *depthFrame);
     HRESULT updateColorFrameData(ColorFrameInfo &colorFrameInfo, IColorFrame *colorFrame);
