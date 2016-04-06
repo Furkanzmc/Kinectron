@@ -342,9 +342,9 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
             }
 
             UINT64 trackingIDOne = 0;
-            bodyOne->get_TrackingId(&trackingIDOne);
             UINT64 trackingIDTwo = 0;
-            bodyOne->get_TrackingId(&trackingIDTwo);
+            bodyOne->get_TrackingId(&trackingIDOne);
+            bodyTwo->get_TrackingId(&trackingIDTwo);
 
             Joint *jointsOne = bodyJoints.at(trackingIDOne);
             Joint *jointsTwo = bodyJoints.at(trackingIDTwo);
@@ -393,8 +393,8 @@ void KinectHandler::processClosestBodyConstraint(std::array<IBody *, BODY_COUNT>
                 }
 
                 UINT64 trackingIDOne = 0;
-                body->get_TrackingId(&trackingIDOne);
                 UINT64 trackingIDClosest = 0;
+                body->get_TrackingId(&trackingIDOne);
                 closestBody->get_TrackingId(&trackingIDClosest);
 
                 Joint *jointsOne = bodyJoints.at(trackingIDOne);
