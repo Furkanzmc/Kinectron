@@ -15,6 +15,7 @@ public:
             : type(JointType_Count)
             , isDraw(true)
             , isDirty(true)
+            , isValid(false)
         {
             velocity = {0, 0};
             pos = {0, 0};
@@ -27,7 +28,8 @@ public:
         PointF velocity, pos, attractionPoint, drag;
         CameraSpacePoint spacePoint;
         bool isDraw,
-             isDirty;//Set to true if the position needs to be updated
+             isDirty,//Set to true if the position needs to be updated
+             isValid;
 
         void updatePos(const float &delta, float smoothScale = 1)
         {
@@ -43,6 +45,9 @@ public:
 
             pos.X += velocity.X * delta;
             pos.Y += velocity.Y * delta;
+
+            isValid = true;
+
             //Some joints give -1.#IND, I don't know where it generates from. This fixes that problem by resetting whenever that happens
             if (invalidCheck(pos)) {
                 reset();
@@ -56,6 +61,7 @@ public:
             attractionPoint = {0, 0};
             drag = {1.5f, 1.5f};
             spacePoint = {0, 0, 0};
+            isValid = false;
         }
     };
     typedef std::array<JointProp, JointType_Count> JointArray;
