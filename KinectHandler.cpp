@@ -339,9 +339,6 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
         }
     }
 
-    // Get the closest body index
-    std::sort(visibleBodies.begin(), visibleBodies.end(), std::bind(&KinectHandler::sortBodyZDesc, this, std::placeholders::_1, std::placeholders::_2));
-
     processClosestBodyConstraint(visibleBodies);
     processDesiredBodyCount(visibleBodies);
 
@@ -354,13 +351,16 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
 
 void KinectHandler::processClosestBodyConstraint(std::array<IBody *, BODY_COUNT> &visibleBodies)
 {
+    // Get the closest body index
+    std::sort(visibleBodies.begin(), visibleBodies.end(), std::bind(&KinectHandler::sortBodyZDesc, this, std::placeholders::_1, std::placeholders::_2));
     const unsigned int closestBodyIndex = 0;
     IBody *closestBody = visibleBodies[closestBodyIndex];
     if (closestBody) {
         closestBody->get_TrackingId(&m_ClosestBodyID);
     }
 
-    if (m_ClosestBodyOffset > 0) {
+    // Do the calculation only if the visible body count is bigger than the desirec body count
+    if (m_ClosestBodyOffset > 0 && visibleBodies.size() > m_DesiredBodyCount) {
         // Remove the indexes that are not within the range, then sort the bodies from left to right again
         if (closestBody) {
             for (unsigned int bodyIndex = 0; bodyIndex < visibleBodies.size(); bodyIndex++) {
