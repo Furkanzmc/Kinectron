@@ -9,7 +9,7 @@ GePoTool::GePoTool(const unsigned int &sensorIniteType)
     std::fill(m_Bodies.begin(), m_Bodies.end(), nullptr);
 
     m_KinectHandler->initializeDefaultSensor(sensorIniteType);
-    m_KinectHandler->m_ProcessBodyFunc = std::bind(&GePoTool::processBody, this, std::placeholders::_1, std::placeholders::_2);
+    m_KinectHandler->onProcessBody = std::bind(&GePoTool::processBody, this, std::placeholders::_1, std::placeholders::_2);
 }
 
 GePoTool::~GePoTool()

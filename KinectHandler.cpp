@@ -5,10 +5,10 @@
 #include <string>
 
 KinectHandler::KinectHandler()
-    : m_isColorDataAvailable(false)
-    , m_isDepthDataAvailable(false)
-    , m_isBodyIndexDataAvailable(false)
-    , m_isIRDataAvailable(false)
+    : m_IsColorDataAvailable(false)
+    , m_IsDepthDataAvailable(false)
+    , m_IsBodyIndexDataAvailable(false)
+    , m_IsIRDataAvailable(false)
     , m_CanTakeSnapshot(false)
     , m_IsSensorClosed(false)
     , m_IsForceClosestBodyCalculation(false)
@@ -97,7 +97,7 @@ HRESULT KinectHandler::closeSensor()
     return m_Sensor->Close();
 }
 
-void KinectHandler::takeSanpshot(const std::string &filePath)
+void KinectHandler::takeSnapshot(const std::string &filePath)
 {
     m_CanTakeSnapshot = true;
     m_SnapshotFilePath = filePath;
@@ -167,7 +167,7 @@ const RGBQUAD *KinectHandler::getColorDataRGB() const
 
 bool KinectHandler::isColorDataAvailable() const
 {
-    return m_isColorDataAvailable;
+    return m_IsColorDataAvailable;
 }
 
 const unsigned short *KinectHandler::getDepthData() const
@@ -177,7 +177,7 @@ const unsigned short *KinectHandler::getDepthData() const
 
 bool KinectHandler::isDepthDataAvailable() const
 {
-    return m_isDepthDataAvailable;
+    return m_IsDepthDataAvailable;
 }
 
 const unsigned short *KinectHandler::getBodyIndexData() const
@@ -187,7 +187,7 @@ const unsigned short *KinectHandler::getBodyIndexData() const
 
 bool KinectHandler::isBodyIndexDataAvailable() const
 {
-    return m_isBodyIndexDataAvailable;
+    return m_IsBodyIndexDataAvailable;
 }
 
 const unsigned short *KinectHandler::getIRData() const
@@ -197,7 +197,7 @@ const unsigned short *KinectHandler::getIRData() const
 
 bool KinectHandler::isIRDataAvailable() const
 {
-    return m_isIRDataAvailable;
+    return m_IsIRDataAvailable;
 }
 
 void KinectHandler::updateSensor()
@@ -214,10 +214,10 @@ void KinectHandler::updateSensor()
         }
         start = std::chrono::high_resolution_clock::now();
 
-        m_isColorDataAvailable = false;
-        m_isDepthDataAvailable = false;
-        m_isBodyIndexDataAvailable = false;
-        m_isIRDataAvailable = false;
+        m_IsColorDataAvailable = false;
+        m_IsDepthDataAvailable = false;
+        m_IsBodyIndexDataAvailable = false;
+        m_IsIRDataAvailable = false;
         // Safe release the frames before we can use them again
         safeRelease(m_DepthFrame);
         safeRelease(m_ColorFrame);
@@ -343,8 +343,8 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
     processClosestBodyConstraint(visibleBodies);
     processDesiredBodyCount(visibleBodies);
 
-    if (m_ProcessBodyFunc) {
-        m_ProcessBodyFunc(visibleBodies, delta);
+    if (onProcessBody) {
+        onProcessBody(visibleBodies, delta);
     }
 
     m_AllJoints.clear();
@@ -576,7 +576,7 @@ HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFra
             ++buffer;
         }
 
-        m_isDepthDataAvailable = true;
+        m_IsDepthDataAvailable = true;
     }
 
     return hr;
@@ -610,12 +610,12 @@ HRESULT KinectHandler::updateColorFrameData(ColorFrameInfo &colorFrameInfo, ICol
 
             colorFrameInfo.bufferSize = COLOR_WIDTH * COLOR_HEIGHT * sizeof(RGBQUAD);
             hr = colorFrame->CopyConvertedFrameDataToArray(colorFrameInfo.bufferSize, reinterpret_cast<BYTE *>(colorFrameInfo.bufferRGBX), ColorImageFormat_Rgba);
-            m_isColorDataAvailable = true;
-            if (m_TakeScreenshotFunc && m_CanTakeSnapshot) {
+            m_IsColorDataAvailable = true;
+            if (onTakeScreenshot && m_CanTakeSnapshot) {
                 if (m_ThreadScreenshot.joinable()) {
                     m_ThreadScreenshot.join();
                 }
-                m_ThreadScreenshot = std::thread(m_TakeScreenshotFunc, reinterpret_cast<unsigned char *>(colorFrameInfo.bufferRGBX),
+                m_ThreadScreenshot = std::thread(onTakeScreenshot, reinterpret_cast<unsigned char *>(colorFrameInfo.bufferRGBX),
                                                  DATA_LENGTH_COLOR, COLOR_WIDTH, COLOR_HEIGHT, BITS_PER_PIXEL_COLOR, m_SnapshotFilePath);
                 m_CanTakeSnapshot = false;
             }
@@ -671,7 +671,7 @@ HRESULT KinectHandler::updateBodyIndexFrameData(BodyIndexFrameInfo &bodyIndexInf
             ++buffer;
         }
 
-        m_isBodyIndexDataAvailable = true;
+        m_IsBodyIndexDataAvailable = true;
     }
 
     return hr;
@@ -759,7 +759,7 @@ HRESULT KinectHandler::updateIRFrameData(IRFrameInfo &irFrameInfo, IInfraredFram
             ++pBuffer;
         }
 
-        m_isIRDataAvailable = true;
+        m_IsIRDataAvailable = true;
     }
 
     return hr;
@@ -768,6 +768,11 @@ HRESULT KinectHandler::updateIRFrameData(IRFrameInfo &irFrameInfo, IInfraredFram
 void KinectHandler::setClosestBodyOffset(const float &offset)
 {
     m_ClosestBodyOffset = max(0, offset);
+}
+
+void KinectHandler::resetClosestBodyOffset()
+{
+    m_ClosestBodyOffset = 0.f;
 }
 
 const float &KinectHandler::getClosestBodyOffset() const

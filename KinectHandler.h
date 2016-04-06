@@ -20,14 +20,14 @@ public:
                        const unsigned int &width,
                        const unsigned int &height,
                        const unsigned int &bitsPerPixel,
-                       const std::string &)> m_TakeScreenshotFunc;
+                       const std::string &)> onTakeScreenshot;
 
     /**
      * @brief Bodies are provided in a sorted way. Bodies are sorted from left to right on the X-axis. Take the data and run the function you want
      * in OpenGL thread
      * Parameters are body, sensor time, visible body count, index.
      */
-    std::function<void(const std::array<IBody *, BODY_COUNT>&, UINT64)> m_ProcessBodyFunc;
+    std::function<void(const std::array<IBody *, BODY_COUNT>&, UINT64)> onProcessBody;
 
     static const unsigned int BITS_PER_PIXEL_COLOR = sizeof(RGBQUAD) * 8;
     static const unsigned int COLOR_WIDTH = 1920;
@@ -70,10 +70,10 @@ public:
     HRESULT closeSensor();
 
     /**
-     * @brief Calls the m_TakeScreenshotFunc function in a different thread with the given file path
+     * @brief Calls the onTakeScreenshot function in a different thread with the given file path
      * @param filePath
      */
-    void takeSanpshot(const std::string &filePath);
+    void takeSnapshot(const std::string &filePath);
 
     const Vector4 &getFloorClipPlane();
     bool isFloorVisible() const;
@@ -101,16 +101,22 @@ public:
     /** Body Detection Parameters **/
 
     /**
-     * @brief Any skeleton that is behind the closest skeleton by this offset is deleted. If it equals to -1 this removing is not done.
+     * @brief Any skeleton that is behind the closest skeleton by this offset is deleted. If it equals to 0 and calculation is not forced this removing is not done.
      * @param offset
      */
     void setClosestBodyOffset(const float &offset);
+    void resetClosestBodyOffset();
     const float &getClosestBodyOffset() const;
 
     bool isClosestBodyCalculationForced() const;
     void setForceClosestBodyCalculation(bool forced);
 
     unsigned int getDesiredBodyCount() const;
+
+    /**
+     * @brief This is done after closest body calculation. The bodies closest to the center are kept
+     * @param desiredBodyCount
+     */
     void setDesiredBodyCount(unsigned int desiredBodyCount);
 
     const UINT64 &getClosestBodyID() const;
@@ -142,10 +148,10 @@ public:
     float getIRSceneStandartDeviations() const;
 
 private:
-    bool m_isColorDataAvailable,// This is set to true when the Kinect color processing is done
-         m_isDepthDataAvailable,// This is set to true when the Kinect depth processing is done
-         m_isBodyIndexDataAvailable,// This is set to true when the Kinect body index processing is done
-         m_isIRDataAvailable,// This is set to true when the Kinect infrred processing is done
+    bool m_IsColorDataAvailable,// This is set to true when the Kinect color processing is done
+         m_IsDepthDataAvailable,// This is set to true when the Kinect depth processing is done
+         m_IsBodyIndexDataAvailable,// This is set to true when the Kinect body index processing is done
+         m_IsIRDataAvailable,// This is set to true when the Kinect infrred processing is done
          m_CanTakeSnapshot,
          m_IsSensorClosed,
          m_IsForceClosestBodyCalculation;// This ensures that even when the visible and desired body count is the same closest body calculation is done
@@ -170,6 +176,7 @@ private:
     std::recursive_mutex m_Mutex;
 
     UINT64 m_ClosestBodyID;
+
     /**
      * @brief Any skeleton that is behind the closest skeleton by this offset is deleted. If it equals to 0 this removing is not done.
      * If the visible body count equals to the desired body count and m_IsForceClosestBodyCalculation is true then this calclation is skipped
@@ -198,6 +205,10 @@ private:
     IRFrameInfo m_IRFrameInfo;
     BodyFrameInfo m_BodyFrameInfo;
 
+    /**
+     * @brief This map is filled in the beginning of each frame and freed at the end of each frame.
+     * This represents the joints of the available skeletons in the current frame.
+     */
     std::map<UINT64, Joint *> m_AllJoints;
 
 private:
@@ -229,7 +240,7 @@ private:
     bool sortBodyXAsc(IBody *bodyOne, IBody *bodyTwo) const;
 
     /**
-     * @brief /* Use the absolute value to put the ones that are closer to zero on the left.
+     * @brief Uses the absolute value to put the ones that are closer to zero on the left.
      * So, visibleBodies.at(0) is the closest one to the and visibleBodies.at(visibleBodies.size() - 1) is the farthest from the center.
      * @param bodyOne
      * @param bodyTwo
