@@ -43,9 +43,11 @@ KinectHandler::~KinectHandler()
         m_Sensor->Close();
         safeRelease(m_Sensor);
     }
+
     if (m_ThreadUpdate.joinable()) {
         m_ThreadUpdate.join();
     }
+
     if (m_ThreadScreenshot.joinable()) {
         m_ThreadScreenshot.join();
     }
