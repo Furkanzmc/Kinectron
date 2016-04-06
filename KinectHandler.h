@@ -107,6 +107,9 @@ public:
     void setClosestBodyOffset(const float &offset);
     const float &getClosestBodyOffset() const;
 
+    bool isClosestBodyCalculationForced() const;
+    void setForceClosestBodyCalculation(bool forced);
+
     unsigned int getDesiredBodyCount() const;
     void setDesiredBodyCount(unsigned int desiredBodyCount);
 
@@ -144,7 +147,8 @@ private:
          m_isBodyIndexDataAvailable,// This is set to true when the Kinect body index processing is done
          m_isIRDataAvailable,// This is set to true when the Kinect infrred processing is done
          m_CanTakeSnapshot,
-         m_IsSensorClosed;
+         m_IsSensorClosed,
+         m_IsForceClosestBodyCalculation;// This ensures that even when the visible and desired body count is the same closest body calculation is done
 
     std::string m_SnapshotFilePath;
 
@@ -167,7 +171,8 @@ private:
 
     UINT64 m_ClosestBodyID;
     /**
-     * @brief Any skeleton that is behind the closest skeleton by this offset is deleted. If it equals to -1 this removing is not done.
+     * @brief Any skeleton that is behind the closest skeleton by this offset is deleted. If it equals to 0 this removing is not done.
+     * If the visible body count equals to the desired body count and m_IsForceClosestBodyCalculation is true then this calclation is skipped
      */
     float m_ClosestBodyOffset;
 

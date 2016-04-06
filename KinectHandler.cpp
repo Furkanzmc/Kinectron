@@ -11,6 +11,7 @@ KinectHandler::KinectHandler()
     , m_isIRDataAvailable(false)
     , m_CanTakeSnapshot(false)
     , m_IsSensorClosed(false)
+    , m_IsForceClosestBodyCalculation(false)
     , m_SnapshotFilePath("")
     , m_Sensor(nullptr)
     , m_MultiSourceFrameReader(nullptr)
@@ -23,7 +24,7 @@ KinectHandler::KinectHandler()
     , m_CoordinateMapper(nullptr)
     , m_InitType(FrameSourceTypes_None)
     , m_ClosestBodyID(0)
-    , m_ClosestBodyOffset(-1.f)
+    , m_ClosestBodyOffset(0)
     , m_MaxBodyDistance(0.f)
     , m_DesiredBodyCount(BODY_COUNT)
       // Frame Info
@@ -360,7 +361,7 @@ void KinectHandler::processClosestBodyConstraint(std::array<IBody *, BODY_COUNT>
     }
 
     // Do the calculation only if the visible body count is bigger than the desired body count
-    if (m_ClosestBodyOffset > 0 && visibleBodies.size() > m_DesiredBodyCount) {
+    if (m_ClosestBodyOffset > 0 && (m_IsForceClosestBodyCalculation || visibleBodies.size() > m_DesiredBodyCount)) {
         // Remove the indexes that are not within the range, then sort the bodies from left to right again
         if (closestBody) {
             for (unsigned int bodyIndex = 0; bodyIndex < visibleBodies.size(); bodyIndex++) {
@@ -766,12 +767,22 @@ HRESULT KinectHandler::updateIRFrameData(IRFrameInfo &irFrameInfo, IInfraredFram
 
 void KinectHandler::setClosestBodyOffset(const float &offset)
 {
-    m_ClosestBodyOffset = offset;
+    m_ClosestBodyOffset = max(0, offset);
 }
 
 const float &KinectHandler::getClosestBodyOffset() const
 {
     return m_ClosestBodyOffset;
+}
+
+bool KinectHandler::isClosestBodyCalculationForced() const
+{
+    return m_IsForceClosestBodyCalculation;
+}
+
+void KinectHandler::setForceClosestBodyCalculation(bool forced)
+{
+    m_IsForceClosestBodyCalculation = forced;
 }
 
 unsigned int KinectHandler::getDesiredBodyCount() const
