@@ -252,29 +252,8 @@ float GePoTool::getAngleBetweenHands(IBody *body) const
     Joint joints[JointType_Count];
     body->GetJoints(_countof(joints), joints);
 
-    CameraSpacePoint leftHand = joints[JointType_HandLeft].Position;
-    CameraSpacePoint leftElbow = joints[JointType_ElbowLeft].Position;
-    CameraSpacePoint leftShoulder = joints[JointType_ShoulderLeft].Position;
-
-    CameraSpacePoint rightHand = joints[JointType_HandRight].Position;
-    CameraSpacePoint rightElbow = joints[JointType_ElbowRight].Position;
-    CameraSpacePoint rightShoulder = joints[JointType_ShoulderRight].Position;
-
-    /* When getting the angle value, to prevent the angle detectin from happenning when the hands are just dangling the hand that is above the other
-     * should also be over or on the elbow.
-     */
-    if (leftHand.Y > rightHand.Y && leftElbow.Y > leftHand.Y) {
-        return static_cast<float>(INVALID_ANGLE);
-    }
-    if (rightHand.Y > leftHand.Y && rightElbow.Y > rightHand.Y) {
-        return static_cast<float>(INVALID_ANGLE);
-    }
-    if (rightHand.X < rightShoulder.X) {
-        return static_cast<float>(INVALID_ANGLE);
-    }
-    if (leftHand.X > leftShoulder.X) {
-        return static_cast<float>(INVALID_ANGLE);
-    }
+    const CameraSpacePoint leftHand = joints[JointType_HandLeft].Position;
+    const CameraSpacePoint rightHand = joints[JointType_HandRight].Position;
 
     // x -> Distance on x axis, y -> distance on y axis, h -> hypotenuse
     float x = 0, y = 0, h = 0;
