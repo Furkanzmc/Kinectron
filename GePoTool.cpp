@@ -267,7 +267,7 @@ float GePoTool::getAngleBetweenHands(IBody *body) const
     y = std::abs(leftHand.Y - rightHand.Y);
     h = std::sqrtf(std::powf(leftHand.X - rightHand.X, 2) + std::powf(leftHand.Y - rightHand.Y, 2));
     const float radian = std::asinf(y / h);
-    float angle = (radian * 180) / 3.14159265f;// Convert to degrees
+    float angle = toDegree(radian);// Convert to degrees
     if (leftHand.Y < rightHand.Y) {
         angle *= -1;
     }
