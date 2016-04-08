@@ -94,12 +94,15 @@ public:
     void enableJointDrawing(unsigned int bodyIndex, JointType jointType, bool enable);
     bool isJointDrew(unsigned int bodyIndex, JointType jointType) const;
 
+    bool isBodyTracked(const unsigned int &bodyIndex) const;
+
 private:
     GePoTool *m_PostureTool;
     ICoordinateMapper *m_CoordinateMapper;
     float m_SmoothScale;
     PointF m_PositionScale;
     std::array<std::array<JointProp, JointType_Count>, BODY_COUNT> m_JointPositions;
+    std::array<bool, BODY_COUNT> m_BodyTrackedStatuses;
 
 private:
     void setupSmoother();

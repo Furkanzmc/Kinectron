@@ -9,6 +9,7 @@ SkeletonSmoother::SkeletonSmoother(ICoordinateMapper *coordinateMapper)
     , m_SmoothScale(1.f)
 {
     setupSmoother();
+    std::fill(m_BodyTrackedStatuses.begin(), m_BodyTrackedStatuses.end(), false);
 }
 
 SkeletonSmoother::SkeletonSmoother(GePoTool *postureTool)
@@ -21,6 +22,7 @@ SkeletonSmoother::SkeletonSmoother(GePoTool *postureTool)
     }
 
     setupSmoother();
+    std::fill(m_BodyTrackedStatuses.begin(), m_BodyTrackedStatuses.end(), false);
 }
 
 void SkeletonSmoother::update(const float &delta)
@@ -59,6 +61,7 @@ void SkeletonSmoother::updateJointPositions(const unsigned int &bodyIndex, const
         return;
     }
 
+    m_BodyTrackedStatuses[bodyIndex] = true;
     for (unsigned int jointIndex = 0; jointIndex < JointType_Count; jointIndex++) {
         const PointF screenPos = mapBodyPointToScreenPoint(joints[jointIndex].Position);
         JointArray &jointPositions = m_JointPositions.at(bodyIndex);
@@ -81,6 +84,7 @@ void SkeletonSmoother::updateJointPositions(const unsigned int &bodyIndex, const
 
 void SkeletonSmoother::reset(const unsigned int &bodyIndex)
 {
+    m_BodyTrackedStatuses[bodyIndex] = false;
     for (unsigned int i = 0; i < JointType_Count; i++) {
         m_JointPositions.at(bodyIndex).at(i).reset();
     }
@@ -137,6 +141,15 @@ void SkeletonSmoother::enableJointDrawing(unsigned int bodyIndex, JointType join
 bool SkeletonSmoother::isJointDrew(unsigned int bodyIndex, JointType jointType) const
 {
     return m_JointPositions.at(bodyIndex).at(jointType).isDraw;
+}
+
+bool SkeletonSmoother::isBodyTracked(const unsigned int &bodyIndex) const
+{
+    if (bodyIndex >= BODY_COUNT) {
+        return false;
+    }
+
+    return m_BodyTrackedStatuses.at(bodyIndex);
 }
 
 void SkeletonSmoother::setupSmoother()
