@@ -43,6 +43,22 @@ struct DepthFrameInfo {
         }
     }
 
+    void reset()
+    {
+        time = 0;
+        safeRelease(frameDescription);
+        width = 0;
+        height = 0;
+        minReliableDistance = 0;
+        maxReliableDistance = 0;
+        bufferSize = 0;
+        buffer = nullptr;
+        if (bufferRGB) {
+            delete[] bufferRGB;
+            bufferRGB = nullptr;
+        }
+    }
+
     INT64 time = 0;
     IFrameDescription *frameDescription = nullptr;
     int width = 0;
@@ -57,6 +73,20 @@ struct ColorFrameInfo {
     ~ColorFrameInfo()
     {
         safeRelease(frameDescription);
+        if (bufferRGBX) {
+            delete[] bufferRGBX;
+            bufferRGBX = nullptr;
+        }
+    }
+
+    void reset()
+    {
+        time = 0;
+        safeRelease(frameDescription);
+        width = 0;
+        height = 0;
+        imageFormat = ColorImageFormat_None;
+        bufferSize = 0;
         if (bufferRGBX) {
             delete[] bufferRGBX;
             bufferRGBX = nullptr;
@@ -82,6 +112,20 @@ struct BodyIndexFrameInfo {
         }
     }
 
+    void reset()
+    {
+        time = 0;
+        safeRelease(frameDescription);
+        width = 0;
+        height = 0;
+        bufferSize = 0;
+        buffer = nullptr;
+        if (bufferRGB) {
+            delete[] bufferRGB;
+            bufferRGB = nullptr;
+        }
+    }
+
     INT64 time = 0;
     IFrameDescription *frameDescription = nullptr;
     int width = 0;
@@ -94,6 +138,12 @@ struct BodyIndexFrameInfo {
 struct BodyFrameInfo {
     INT64 time = 0;
     Vector4 floorClipPlane;
+
+    void reset()
+    {
+        time = 0;
+        floorClipPlane = { 0, 0, 0, 0 };
+    }
 };
 
 struct IRFrameInfo {
@@ -101,6 +151,27 @@ struct IRFrameInfo {
     {
         safeRelease(frameDescription);
 
+        if (bufferRGB) {
+            delete[] bufferRGB;
+            bufferRGB = nullptr;
+        }
+    }
+
+    void reset()
+    {
+        time = 0;
+        safeRelease(frameDescription);
+        width = 0;
+        height = 0;
+        minReliableDistance = 0;
+        maxReliableDistance = 0;
+        bufferSize = 0;
+        buffer = nullptr;
+        sourceValueMaximum = static_cast<float>(USHRT_MAX);
+        outputValueMinimum = 0.01f;
+        outputValueMaximum = 1.0f;
+        sceneValueAverage = 0.08f;
+        sceneStandardDeviations = 3.0f;
         if (bufferRGB) {
             delete[] bufferRGB;
             bufferRGB = nullptr;

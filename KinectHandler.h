@@ -70,6 +70,11 @@ public:
     HRESULT closeSensor();
 
     /**
+     * @brief Closes the sensor, terminates the threads, releases the frames and resets the frame infos
+     */
+    void reset();
+
+    /**
      * @brief Calls the onTakeScreenshot function in a different thread with the given file path
      * @param filePath
      */

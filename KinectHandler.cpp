@@ -59,6 +59,7 @@ KinectHandler::~KinectHandler()
     safeRelease(m_BodyIndexFrame);
     safeRelease(m_BodyFrame);
     safeRelease(m_IRFrame);
+    safeRelease(m_CoordinateMapper);
 }
 
 HRESULT KinectHandler::initializeDefaultSensor(const unsigned int &initeType)
@@ -70,11 +71,15 @@ HRESULT KinectHandler::initializeDefaultSensor(const unsigned int &initeType)
     if (SUCCEEDED(hr) && m_Sensor) {
         hr = m_Sensor->get_CoordinateMapper(&m_CoordinateMapper);
 
-        hr = m_Sensor->Open();
+        if (SUCCEEDED(hr)) {
+            hr = m_Sensor->Open();
+        }
         if (SUCCEEDED(hr)) {
             hr = m_Sensor->OpenMultiSourceFrameReader(initeType, &m_MultiSourceFrameReader);
         }
         if (SUCCEEDED(hr)) {
+            // Set this to false to not prevent the KinectHandler::updateSensor from running
+            m_IsSensorClosed = false;
             m_ThreadUpdate = std::thread(&KinectHandler::updateSensor, this);
         }
     }
@@ -98,6 +103,46 @@ HRESULT KinectHandler::closeSensor()
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
     m_IsSensorClosed = true;
     return m_Sensor->Close();
+}
+
+void KinectHandler::reset()
+{
+    std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+
+    if (m_Sensor) {
+        closeSensor();
+        safeRelease(m_Sensor);
+    }
+
+    if (m_ThreadUpdate.joinable()) {
+        m_ThreadUpdate.join();
+    }
+
+    if (m_ThreadScreenshot.joinable()) {
+        m_ThreadScreenshot.join();
+    }
+
+    safeRelease(m_MultiSourceFrameReader);
+    safeRelease(m_MultiSourceFrame);
+    safeRelease(m_DepthFrame);
+    safeRelease(m_ColorFrame);
+    safeRelease(m_BodyIndexFrame);
+    safeRelease(m_BodyFrame);
+    safeRelease(m_IRFrame);
+    safeRelease(m_CoordinateMapper);
+
+    m_IsColorDataAvailable = false;
+    m_IsDepthDataAvailable = false;
+    m_IsBodyIndexDataAvailable = false;
+    m_IsIRDataAvailable = false;
+    m_CanTakeSnapshot = false;
+
+    // Resets the frame infos
+    m_DepthFrameInfo.reset();
+    m_ColorFrameInfo.reset();
+    m_BodyIndexFrameInfo.reset();
+    m_IRFrameInfo.reset();
+    m_BodyFrameInfo.reset();
 }
 
 void KinectHandler::takeSnapshot(const std::string &filePath)
