@@ -215,7 +215,7 @@ private:
 
     /**
      * @brief This map is filled in the beginning of each frame and freed at the end of each frame.
-     * This represents the joints of the available skeletons in the current frame.
+     * This represents the joints of the available skeletons in the current frame. This is not meant to be shared with outside of the class.
      */
     std::map<UINT64, Joint *> m_AllJoints;
 
@@ -266,11 +266,11 @@ private:
 
     /** Frame Update Functions **/
 
-    HRESULT updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFrame *depthFrame);
-    HRESULT updateColorFrameData(ColorFrameInfo &colorFrameInfo, IColorFrame *colorFrame);
-    HRESULT updateBodyIndexFrameData(BodyIndexFrameInfo &bodyIndexInfo, IBodyIndexFrame *bodyIndexFrame);
-    HRESULT updateBodyFrame(IBodyFrame *bodyFrame);
-    HRESULT updateIRFrameData(IRFrameInfo &irFrameInfo, IInfraredFrame *irFrame);
+    HRESULT updateDepthFrameData();
+    HRESULT updateColorFrameData();
+    HRESULT updateBodyIndexFrameData();
+    HRESULT updateBodyFrame();
+    HRESULT updateIRFrameData();
 };
 
 #endif // KINECTHANDLER_H

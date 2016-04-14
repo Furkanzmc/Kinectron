@@ -58,6 +58,7 @@ KinectHandler::~KinectHandler()
     safeRelease(m_ColorFrame);
     safeRelease(m_BodyIndexFrame);
     safeRelease(m_BodyFrame);
+    safeRelease(m_IRFrame);
 }
 
 HRESULT KinectHandler::initializeDefaultSensor(const unsigned int &initeType)
@@ -289,16 +290,17 @@ void KinectHandler::updateSensor()
             }
             safeRelease(irFrameReference);
 
-            updateBodyFrame(m_BodyFrame);
-            updateColorFrameData(m_ColorFrameInfo, m_ColorFrame);
-            updateDepthFrameData(m_DepthFrameInfo, m_DepthFrame);
-            updateBodyIndexFrameData(m_BodyIndexFrameInfo, m_BodyIndexFrame);
-            updateIRFrameData(m_IRFrameInfo, m_IRFrame);
+            updateBodyFrame();
+            updateColorFrameData();
+            updateDepthFrameData();
+            updateBodyIndexFrameData();
+            updateIRFrameData();
 
             // Release the frame descriptions
             safeRelease(m_DepthFrameInfo.frameDescription);
             safeRelease(m_ColorFrameInfo.frameDescription);
             safeRelease(m_BodyIndexFrameInfo.frameDescription);
+            safeRelease(m_IRFrameInfo.frameDescription);
         }
     }
 }
@@ -306,6 +308,7 @@ void KinectHandler::updateSensor()
 void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody **bodies)
 {
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+
     HRESULT hr = E_FAIL;
     std::array<IBody *, BODY_COUNT> visibleBodies;
     std::fill(visibleBodies.begin(), visibleBodies.end(), nullptr);
@@ -319,9 +322,12 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
         if (body) {
             BOOLEAN isBodyracked = false;
             hr = body->get_IsTracked(&isBodyracked);
+
             if (SUCCEEDED(hr) && isBodyracked) {
                 Joint joints[JointType_Count];
                 hr = body->GetJoints(_countof(joints), joints);
+
+                // Get the joints once in here and use it anywhere else for the same frame.
                 if (SUCCEEDED(SUCCEEDED(hr))) {
                     UINT64 trackingID = 0;
                     hr = body->get_TrackingId(&trackingID);
@@ -430,6 +436,7 @@ bool KinectHandler::sortBodyZDesc(IBody *bodyOne, IBody *bodyTwo) const
 
     const CameraSpacePoint spineMidPosOne = jointsOne[JointType_Head].Position;
     const CameraSpacePoint spineMidPosTwo = jointsTwo[JointType_Head].Position;
+
     return spineMidPosOne.Z < spineMidPosTwo.Z;
 }
 
@@ -459,6 +466,7 @@ bool KinectHandler::sortBodyXAsc(IBody *bodyOne, IBody *bodyTwo) const
     if (spineMidPosOne.X < spineMidPosTwo.X) {
         isOnLeft = true;
     }
+
     return isOnLeft;
 }
 
@@ -487,6 +495,7 @@ bool KinectHandler::sortBodyCenter(IBody *bodyOne, IBody *bodyTwo) const
     if (std::abs(spineMidPosOne.X) < std::abs(spineMidPosTwo.X)) {
         isOnLeft = true;
     }
+
     return isOnLeft;
 }
 
@@ -516,47 +525,48 @@ bool KinectHandler::sortBodyCenterAndZDesc(IBody *bodyOne, IBody *bodyTwo) const
     if (std::abs(spineMidPosOne.X) < std::abs(spineMidPosTwo.X) && std::abs(spineMidPosOne.Z) < std::abs(spineMidPosTwo.Z)) {
         isOnLeft = true;
     }
+
     return isOnLeft;
 }
 
-HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFrame *depthFrame)
+HRESULT KinectHandler::updateDepthFrameData()
 {
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-    if (depthFrame == nullptr) {
+    if (m_DepthFrame == nullptr) {
         return E_FAIL;
     }
 
-    HRESULT hr = depthFrame->get_RelativeTime(&depthInfo.time);
+    HRESULT hr = m_DepthFrame->get_RelativeTime(&m_DepthFrameInfo.time);
     if (SUCCEEDED(hr)) {
-        hr = depthFrame->get_FrameDescription(&depthInfo.frameDescription);
+        hr = m_DepthFrame->get_FrameDescription(&m_DepthFrameInfo.frameDescription);
     }
     if (SUCCEEDED(hr)) {
-        hr = depthInfo.frameDescription->get_Width(&depthInfo.width);
+        hr = m_DepthFrameInfo.frameDescription->get_Width(&m_DepthFrameInfo.width);
     }
     if (SUCCEEDED(hr)) {
-        hr = depthInfo.frameDescription->get_Height(&depthInfo.height);
+        hr = m_DepthFrameInfo.frameDescription->get_Height(&m_DepthFrameInfo.height);
     }
     if (SUCCEEDED(hr)) {
-        hr = depthFrame->get_DepthMinReliableDistance(&depthInfo.minReliableDistance);
+        hr = m_DepthFrame->get_DepthMinReliableDistance(&m_DepthFrameInfo.minReliableDistance);
     }
     if (SUCCEEDED(hr)) {
-        hr = depthFrame->get_DepthMaxReliableDistance(&depthInfo.maxReliableDistance);
+        hr = m_DepthFrame->get_DepthMaxReliableDistance(&m_DepthFrameInfo.maxReliableDistance);
     }
     if (SUCCEEDED(hr)) {
-        hr = depthFrame->AccessUnderlyingBuffer(&depthInfo.bufferSize, &depthInfo.buffer);
+        hr = m_DepthFrame->AccessUnderlyingBuffer(&m_DepthFrameInfo.bufferSize, &m_DepthFrameInfo.buffer);
     }
 
     // Process the depth image
-    if (SUCCEEDED(hr) && depthInfo.buffer != nullptr && depthInfo.width == DEPTH_WIDTH && depthInfo.height == DEPTH_HEIGHT) {
-        if (depthInfo.bufferRGB == nullptr) {
-            depthInfo.bufferRGB = new RGBTRIPLE[DEPTH_WIDTH * DEPTH_HEIGHT];
+    if (SUCCEEDED(hr) && m_DepthFrameInfo.buffer != nullptr && m_DepthFrameInfo.width == DEPTH_WIDTH && m_DepthFrameInfo.height == DEPTH_HEIGHT) {
+        if (m_DepthFrameInfo.bufferRGB == nullptr) {
+            m_DepthFrameInfo.bufferRGB = new RGBTRIPLE[DEPTH_WIDTH * DEPTH_HEIGHT];
         }
 
-        RGBTRIPLE *rgb = depthInfo.bufferRGB;
-        UINT16 *buffer = depthInfo.buffer;
+        RGBTRIPLE *rgb = m_DepthFrameInfo.bufferRGB;
+        UINT16 *buffer = m_DepthFrameInfo.buffer;
 
         // End pixel is start + width * height - 1
-        const UINT16 *bufferEnd = buffer + (depthInfo.width * depthInfo.height);
+        const UINT16 *bufferEnd = buffer + (m_DepthFrameInfo.width * m_DepthFrameInfo.height);
 
         while (buffer < bufferEnd) {
             const USHORT depth = *buffer;
@@ -568,7 +578,8 @@ HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFra
 
             // Note: Using conditionals in this loop could degrade performance.
             // Consider using a lookup table instead when writing production code.
-            const BYTE intensity = static_cast<BYTE>((depth >= depthInfo.minReliableDistance) && (depth <= depthInfo.maxReliableDistance) ? (depth % 256) : 0);
+            const BYTE intensity = static_cast<BYTE>((depth >= m_DepthFrameInfo.minReliableDistance)
+                                   && (depth <= m_DepthFrameInfo.maxReliableDistance) ? (depth % 256) : 0);
 
             rgb->rgbtRed = intensity;
             rgb->rgbtGreen = intensity;
@@ -584,44 +595,43 @@ HRESULT KinectHandler::updateDepthFrameData(DepthFrameInfo &depthInfo, IDepthFra
     return hr;
 }
 
-HRESULT KinectHandler::updateColorFrameData(ColorFrameInfo &colorFrameInfo, IColorFrame *colorFrame)
+HRESULT KinectHandler::updateColorFrameData()
 {
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-    if (colorFrame == nullptr) {
+    if (m_ColorFrame == nullptr) {
         return E_FAIL;
     }
 
-    HRESULT hr = colorFrame->get_RelativeTime(&colorFrameInfo.time);
-
+    HRESULT hr = m_ColorFrame->get_RelativeTime(&m_ColorFrameInfo.time);
     if (SUCCEEDED(hr)) {
-        hr = colorFrame->get_FrameDescription(&colorFrameInfo.frameDescription);
+        hr = m_ColorFrame->get_FrameDescription(&m_ColorFrameInfo.frameDescription);
     }
     if (SUCCEEDED(hr)) {
-        hr = colorFrameInfo.frameDescription->get_Width(&colorFrameInfo.width);
+        hr = m_ColorFrameInfo.frameDescription->get_Width(&m_ColorFrameInfo.width);
     }
     if (SUCCEEDED(hr)) {
-        hr = colorFrameInfo.frameDescription->get_Height(&colorFrameInfo.height);
+        hr = m_ColorFrameInfo.frameDescription->get_Height(&m_ColorFrameInfo.height);
     }
     if (SUCCEEDED(hr)) {
-        hr = colorFrame->get_RawColorImageFormat(&colorFrameInfo.imageFormat);
+        hr = m_ColorFrame->get_RawColorImageFormat(&m_ColorFrameInfo.imageFormat);
     }
     if (SUCCEEDED(hr)) {
-        if (colorFrameInfo.imageFormat == ColorImageFormat_Bgra) {
-            hr = colorFrame->AccessRawUnderlyingBuffer(&colorFrameInfo.bufferSize, reinterpret_cast<BYTE **>(&colorFrameInfo.bufferRGBX));
+        if (m_ColorFrameInfo.imageFormat == ColorImageFormat_Bgra) {
+            hr = m_ColorFrame->AccessRawUnderlyingBuffer(&m_ColorFrameInfo.bufferSize, reinterpret_cast<BYTE **>(&m_ColorFrameInfo.bufferRGBX));
         }
         else if (SUCCEEDED(hr)) {
-            if (colorFrameInfo.bufferRGBX == nullptr) {
-                colorFrameInfo.bufferRGBX = new RGBQUAD[COLOR_WIDTH * COLOR_HEIGHT];;
+            if (m_ColorFrameInfo.bufferRGBX == nullptr) {
+                m_ColorFrameInfo.bufferRGBX = new RGBQUAD[COLOR_WIDTH * COLOR_HEIGHT];;
             }
 
-            colorFrameInfo.bufferSize = COLOR_WIDTH * COLOR_HEIGHT * sizeof(RGBQUAD);
-            hr = colorFrame->CopyConvertedFrameDataToArray(colorFrameInfo.bufferSize, reinterpret_cast<BYTE *>(colorFrameInfo.bufferRGBX), ColorImageFormat_Rgba);
+            m_ColorFrameInfo.bufferSize = COLOR_WIDTH * COLOR_HEIGHT * sizeof(RGBQUAD);
+            hr = m_ColorFrame->CopyConvertedFrameDataToArray(m_ColorFrameInfo.bufferSize, reinterpret_cast<BYTE *>(m_ColorFrameInfo.bufferRGBX), ColorImageFormat_Rgba);
             m_IsColorDataAvailable = true;
             if (onTakeScreenshot && m_CanTakeSnapshot) {
                 if (m_ThreadScreenshot.joinable()) {
                     m_ThreadScreenshot.join();
                 }
-                m_ThreadScreenshot = std::thread(onTakeScreenshot, reinterpret_cast<unsigned char *>(colorFrameInfo.bufferRGBX),
+                m_ThreadScreenshot = std::thread(onTakeScreenshot, reinterpret_cast<unsigned char *>(m_ColorFrameInfo.bufferRGBX),
                                                  DATA_LENGTH_COLOR, COLOR_WIDTH, COLOR_HEIGHT, BITS_PER_PIXEL_COLOR, m_SnapshotFilePath);
                 m_CanTakeSnapshot = false;
             }
@@ -633,38 +643,39 @@ HRESULT KinectHandler::updateColorFrameData(ColorFrameInfo &colorFrameInfo, ICol
     return hr;
 }
 
-HRESULT KinectHandler::updateBodyIndexFrameData(BodyIndexFrameInfo &bodyIndexInfo, IBodyIndexFrame *bodyIndexFrame)
+HRESULT KinectHandler::updateBodyIndexFrameData()
 {
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-    if (bodyIndexFrame == nullptr) {
+    if (m_BodyIndexFrame == nullptr) {
         return E_FAIL;
     }
 
-    HRESULT hr = bodyIndexFrame->get_RelativeTime(&bodyIndexInfo.time);
+    HRESULT hr = m_BodyIndexFrame->get_RelativeTime(&m_BodyIndexFrameInfo.time);
     if (SUCCEEDED(hr)) {
-        hr = bodyIndexFrame->get_FrameDescription(&bodyIndexInfo.frameDescription);
+        hr = m_BodyIndexFrame->get_FrameDescription(&m_BodyIndexFrameInfo.frameDescription);
     }
     if (SUCCEEDED(hr)) {
-        hr = bodyIndexInfo.frameDescription->get_Width(&bodyIndexInfo.width);
+        hr = m_BodyIndexFrameInfo.frameDescription->get_Width(&m_BodyIndexFrameInfo.width);
     }
     if (SUCCEEDED(hr)) {
-        hr = bodyIndexInfo.frameDescription->get_Height(&bodyIndexInfo.height);
+        hr = m_BodyIndexFrameInfo.frameDescription->get_Height(&m_BodyIndexFrameInfo.height);
     }
     if (SUCCEEDED(hr)) {
-        hr = bodyIndexFrame->AccessUnderlyingBuffer(&bodyIndexInfo.bufferSize, &bodyIndexInfo.buffer);
+        hr = m_BodyIndexFrame->AccessUnderlyingBuffer(&m_BodyIndexFrameInfo.bufferSize, &m_BodyIndexFrameInfo.buffer);
     }
 
     // Process body index
-    if (SUCCEEDED(hr) && bodyIndexInfo.buffer != nullptr && bodyIndexInfo.width == BODY_INDEX_WIDTH && bodyIndexInfo.height == BODY_INDEX_HEIGHT) {
-        if (bodyIndexInfo.bufferRGB == nullptr) {
-            bodyIndexInfo.bufferRGB = new RGBTRIPLE[BODY_INDEX_WIDTH * BODY_INDEX_HEIGHT];
+    if (SUCCEEDED(hr) && m_BodyIndexFrameInfo.buffer != nullptr && m_BodyIndexFrameInfo.width == BODY_INDEX_WIDTH
+        && m_BodyIndexFrameInfo.height == BODY_INDEX_HEIGHT) {
+        if (m_BodyIndexFrameInfo.bufferRGB == nullptr) {
+            m_BodyIndexFrameInfo.bufferRGB = new RGBTRIPLE[BODY_INDEX_WIDTH * BODY_INDEX_HEIGHT];
         }
 
-        RGBTRIPLE *rgb = bodyIndexInfo.bufferRGB;
-        UINT8 *buffer = bodyIndexInfo.buffer;
+        RGBTRIPLE *rgb = m_BodyIndexFrameInfo.bufferRGB;
+        UINT8 *buffer = m_BodyIndexFrameInfo.buffer;
 
         // End pixel is start + width * height - 1
-        const UINT8 *bufferEnd = buffer + (bodyIndexInfo.width * bodyIndexInfo.height);
+        const UINT8 *bufferEnd = buffer + (m_BodyIndexFrameInfo.width * m_BodyIndexFrameInfo.height);
 
         while (buffer < bufferEnd) {
             const USHORT pixel = *buffer;
@@ -683,20 +694,20 @@ HRESULT KinectHandler::updateBodyIndexFrameData(BodyIndexFrameInfo &bodyIndexInf
     return hr;
 }
 
-HRESULT KinectHandler::updateBodyFrame(IBodyFrame *bodyFrame)
+HRESULT KinectHandler::updateBodyFrame()
 {
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-    if (bodyFrame == nullptr) {
+    if (m_BodyFrame == nullptr) {
         return E_FAIL;
     }
 
-    HRESULT hr = bodyFrame->get_FloorClipPlane(&m_BodyFrameInfo.floorClipPlane);
+    HRESULT hr = m_BodyFrame->get_FloorClipPlane(&m_BodyFrameInfo.floorClipPlane);
     if (SUCCEEDED(hr)) {
-        hr = bodyFrame->get_RelativeTime(&m_BodyFrameInfo.time);
+        hr = m_BodyFrame->get_RelativeTime(&m_BodyFrameInfo.time);
         IBody *bodies[BODY_COUNT] = {nullptr};
 
         if (SUCCEEDED(hr)) {
-            hr = bodyFrame->GetAndRefreshBodyData(_countof(bodies), bodies);
+            hr = m_BodyFrame->GetAndRefreshBodyData(_countof(bodies), bodies);
         }
         if (SUCCEEDED(hr)) {
             processBody(m_BodyFrameInfo.time, BODY_COUNT, bodies);
@@ -706,57 +717,56 @@ HRESULT KinectHandler::updateBodyFrame(IBodyFrame *bodyFrame)
     return hr;
 }
 
-HRESULT KinectHandler::updateIRFrameData(IRFrameInfo &irFrameInfo, IInfraredFrame *irFrame)
+HRESULT KinectHandler::updateIRFrameData()
 {
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-    if (irFrame == nullptr) {
+    if (m_IRFrame == nullptr) {
         return E_FAIL;
     }
 
-    HRESULT hr = irFrame->get_RelativeTime(&irFrameInfo.time);
+    HRESULT hr = m_IRFrame->get_RelativeTime(&m_IRFrameInfo.time);
     if (SUCCEEDED(hr)) {
-        hr = irFrame->get_FrameDescription(&irFrameInfo.frameDescription);
+        hr = m_IRFrame->get_FrameDescription(&m_IRFrameInfo.frameDescription);
     }
     if (SUCCEEDED(hr)) {
-        hr = irFrameInfo.frameDescription->get_Width(&irFrameInfo.width);
+        hr = m_IRFrameInfo.frameDescription->get_Width(&m_IRFrameInfo.width);
     }
     if (SUCCEEDED(hr)) {
-        hr = irFrameInfo.frameDescription->get_Height(&irFrameInfo.height);
+        hr = m_IRFrameInfo.frameDescription->get_Height(&m_IRFrameInfo.height);
     }
     if (SUCCEEDED(hr)) {
-        hr = irFrame->AccessUnderlyingBuffer(&irFrameInfo.bufferSize, &irFrameInfo.buffer);
+        hr = m_IRFrame->AccessUnderlyingBuffer(&m_IRFrameInfo.bufferSize, &m_IRFrameInfo.buffer);
     }
 
-    // Process ir frame
-    if (SUCCEEDED(hr) && irFrameInfo.buffer && irFrameInfo.width == IR_WIDTH && irFrameInfo.height == IR_HEIGHT) {
-        if (irFrameInfo.bufferRGB == nullptr) {
-            irFrameInfo.bufferRGB = new RGBTRIPLE[IR_WIDTH * IR_HEIGHT];
+    // Process IR frame
+    if (SUCCEEDED(hr) && m_IRFrameInfo.buffer && m_IRFrameInfo.width == IR_WIDTH && m_IRFrameInfo.height == IR_HEIGHT) {
+        if (m_IRFrameInfo.bufferRGB == nullptr) {
+            m_IRFrameInfo.bufferRGB = new RGBTRIPLE[IR_WIDTH * IR_HEIGHT];
         }
 
-        RGBTRIPLE *pDest = irFrameInfo.bufferRGB;
-        UINT16 *pBuffer = irFrameInfo.buffer;
+        RGBTRIPLE *pDest = m_IRFrameInfo.bufferRGB;
+        UINT16 *pBuffer = m_IRFrameInfo.buffer;
 
-        // end pixel is start + width*height - 1
+        // End pixel is start + width * height - 1
         const UINT16 *pBufferEnd = pBuffer + (IR_WIDTH * IR_HEIGHT);
 
         while (pBuffer < pBufferEnd) {
-            // normalize the incoming infrared data (ushort) to a float ranging from
-            // [InfraredOutputValueMinimum, InfraredOutputValueMaximum] by
-            // 1. dividing the incoming value by the source maximum value
-            float intensityRatio = static_cast<float>(*pBuffer) / irFrameInfo.sourceValueMaximum;
+            /** Normalize the incoming infrared data (ushort) to a float ranging from [InfraredOutputValueMinimum, InfraredOutputValueMaximum] by
+             * 1. Dividing the incoming value by the source maximum value
+             **/
+            float intensityRatio = static_cast<float>(*pBuffer) / m_IRFrameInfo.sourceValueMaximum;
 
-            // 2. dividing by the (average scene value * standard deviations)
-            intensityRatio /= irFrameInfo.sceneValueAverage * irFrameInfo.sceneStandardDeviations;
+            // 2. Dividing by the (average scene value * standard deviations)
+            intensityRatio /= m_IRFrameInfo.sceneValueAverage * m_IRFrameInfo.sceneStandardDeviations;
 
-            // 3. limiting the value to InfraredOutputValueMaximum
-            intensityRatio = min(irFrameInfo.outputValueMaximum, intensityRatio);
+            // 3. Limiting the value to InfraredOutputValueMaximum
+            intensityRatio = min(m_IRFrameInfo.outputValueMaximum, intensityRatio);
 
-            // 4. limiting the lower value InfraredOutputValueMinimym
-            intensityRatio = max(irFrameInfo.outputValueMinimum, intensityRatio);
+            // 4. Limiting the lower value InfraredOutputValueMinimym
+            intensityRatio = max(m_IRFrameInfo.outputValueMinimum, intensityRatio);
 
-            // 5. converting the normalized value to a byte and using the result
-            // as the RGB components required by the image
-            byte intensity = static_cast<byte>(intensityRatio * 255.0f);
+            // 5. Converting the normalized value to a byte and using the result as the RGB components required by the image
+            const byte intensity = static_cast<byte>(intensityRatio * 255.0f);
             pDest->rgbtRed = intensity;
             pDest->rgbtGreen = intensity;
             pDest->rgbtBlue = intensity;
