@@ -180,6 +180,9 @@ private:
     std::thread m_ThreadUpdate, m_ThreadScreenshot;
     std::recursive_mutex m_Mutex;
 
+    /**
+     * @brief Tracking ID for the closest skeleton on the Z-axis
+     */
     UINT64 m_ClosestBodyID;
 
     /**
