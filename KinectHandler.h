@@ -8,7 +8,7 @@ class KinectHandler
 public:
     /**
      * @brief This is called when the takeSanpshot() method is called and the color data is available.
-     * This requires color stream. Take the data and run the function you want in OpenGL thread.
+     * This requires color stream. Take the data and run the function you want in main thread.
      * @param colorData
      * @param dataLength
      * @param width
