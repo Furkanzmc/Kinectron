@@ -1,7 +1,7 @@
 project(Kinectron)
 cmake_minimum_required(VERSION 2.8)
-set(KINECT_UTILS_VERSION 1.0)
-message("NOTICE [Kinectron]: Using Kinectron v" ${KINECT_UTILS_VERSION})
+set(KINECTRON_VERSION 1.0)
+message("NOTICE [Kinectron]: Using Kinectron v" ${KINECTRON_VERSION})
 
 # Try to find Kinect
 if(AR STREQUAL "x64" OR AR STREQUAL "x86")
@@ -29,7 +29,7 @@ if(WIN32)
             message("ERROR [Kinectron]: Kinect ${AR} library dir cannot be found")
         endif()
         if(EXISTS $ENV{KINECTSDK20_DIR}/lib/${AR}/Kinect20.lib)
-            set(KINECT_LIB $ENV{KINECTSDK20_DIR}/lib/${AR}/Kinect20.lib CACHE PATH "Kinect v2 library path" FORCE)
+            set(KINECTRON_LIB $ENV{KINECTSDK20_DIR}/lib/${AR}/Kinect20.lib CACHE PATH "Kinect v2 library path" FORCE)
         else()
             message("ERROR [Kinectron]: Kinect ${AR} library file cannot be found")
         endif()
@@ -37,24 +37,24 @@ if(WIN32)
 else()
 endif()
 
-get_filename_component(KINECT_UTILS_ROOT "./" ABSOLUTE)
+get_filename_component(KINECTRON_ROOT "./" ABSOLUTE)
 
-set(KINECT_UTILS_INC
-    ${KINECT_UTILS_ROOT}
+set(KINECTRON_INC
+    ${KINECTRON_ROOT}
     ${KinectSDK2_INCLUDE_DIRS}
-    ${KINECT_UTILS_ROOT}/Detectors
+    ${KINECTRON_ROOT}/Detectors
     CACHE LIST "Set the list of include paths for Kinectron")
 
-include_directories(${KINECT_UTILS_INC})
+include_directories(${KINECTRON_INC})
 
 if(KINECT_ENABLED)
-  set(KINTECT_UTILS_SRC
+  set(KINECTRON_SRC
     KinectHandler.cpp
     GePoTool.cpp
     SkeletonSmoother.cpp
   )
 
-  list(APPEND KINTECT_UTILS_HEADERS
+  list(APPEND KINECTRON_HEADERS
     KinectHandler.h
     GePoTool.h
     Detectors/GestureDetectorBase.h
@@ -63,7 +63,7 @@ if(KINECT_ENABLED)
   )
 
 #Append Gesture Detectors
-  list(APPEND KINTECT_UTILS_SRC
+  list(APPEND KINECTRON_SRC
     Detectors/LeanDetector.cpp
     Detectors/KickDetector.cpp
     Detectors/PunchDetector.cpp
@@ -78,7 +78,7 @@ if(KINECT_ENABLED)
     Detectors/SquatDetector.cpp
   )
 
-  list(APPEND KINTECT_UTILS_HEADERS
+  list(APPEND KINECTRON_HEADERS
     Detectors/LeanDetector.h
     Detectors/KickDetector.h
     Detectors/PunchDetector.h
@@ -96,11 +96,11 @@ else()
     message("ERROR [Kinectron]: Kinect SDK cannot be found so it is not enabled.")
 endif(KINECT_ENABLED)
 
-add_library(kinect_utils STATIC
-  ${KINTECT_UTILS_SRC}
+add_library(kinectron STATIC
+  ${KINECTRON_SRC}
 )
 
-set_target_properties(kinect_utils
+set_target_properties(kinectron
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
