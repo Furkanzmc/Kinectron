@@ -872,3 +872,13 @@ float KinectHandler::getIRSceneStandartDeviations() const
 {
     return m_IRFrameInfo.sceneStandardDeviations;
 }
+
+USHORT KinectHandler::getDepthMinReliableDistance() const
+{
+    return m_DepthFrameInfo.minReliableDistance;
+}
+
+USHORT KinectHandler::getDepthMaxReliableDistance() const
+{
+    return m_DepthFrameInfo.maxReliableDistance;
+}

@@ -147,6 +147,11 @@ public:
     void setIRSceneStandartDeviations(float deviation);
     float getIRSceneStandartDeviations() const;
 
+    /** Depth Property Getters **/
+
+    USHORT getDepthMinReliableDistance() const;
+    USHORT getDepthMaxReliableDistance() const;
+
 private:
     bool m_IsColorDataAvailable,// This is set to true when the Kinect color processing is done
          m_IsDepthDataAvailable,// This is set to true when the Kinect depth processing is done
