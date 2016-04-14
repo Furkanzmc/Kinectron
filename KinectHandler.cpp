@@ -272,6 +272,7 @@ void KinectHandler::updateSensor()
         m_IsDepthDataAvailable = false;
         m_IsBodyIndexDataAvailable = false;
         m_IsIRDataAvailable = false;
+
         // Safe release the frames before we can use them again
         safeRelease(m_DepthFrame);
         safeRelease(m_ColorFrame);
@@ -291,61 +292,72 @@ void KinectHandler::updateSensor()
             hr = m_MultiSourceFrame->get_DepthFrameReference(&depthFrameReference);
             if (SUCCEEDED(hr)) {
                 hr = depthFrameReference->AcquireFrame(&m_DepthFrame);
+                if (SUCCEEDED(hr)) {
+                    updateDepthFrameData();
+                }
             }
             else {
                 safeRelease(m_DepthFrame);
             }
-            safeRelease(depthFrameReference);
 
             /** Initialize color stream **/
             IColorFrameReference *colorFrameReference = nullptr;
             hr = m_MultiSourceFrame->get_ColorFrameReference(&colorFrameReference);
             if (SUCCEEDED(hr)) {
                 hr = colorFrameReference->AcquireFrame(&m_ColorFrame);
+                if (SUCCEEDED(hr)) {
+                    updateColorFrameData();
+                }
             }
             else {
                 safeRelease(m_ColorFrame);
             }
-            safeRelease(colorFrameReference);
 
             /** Initialize body index stream **/
             IBodyIndexFrameReference *bodyIndexFrameReference = nullptr;
             hr = m_MultiSourceFrame->get_BodyIndexFrameReference(&bodyIndexFrameReference);
             if (SUCCEEDED(hr)) {
                 hr = bodyIndexFrameReference->AcquireFrame(&m_BodyIndexFrame);
+                if (SUCCEEDED(hr)) {
+                    updateBodyIndexFrameData();
+                }
             }
             else {
                 safeRelease(m_BodyIndexFrame);
             }
-            safeRelease(bodyIndexFrameReference);
 
             /** Initialize body data **/
             IBodyFrameReference *bodyFrameReference = nullptr;
             hr = m_MultiSourceFrame->get_BodyFrameReference(&bodyFrameReference);
             if (SUCCEEDED(hr)) {
                 hr = bodyFrameReference->AcquireFrame(&m_BodyFrame);
+                if (SUCCEEDED(hr)) {
+                    updateBodyFrame();
+                }
             }
             else {
                 safeRelease(m_BodyFrame);
             }
-            safeRelease(bodyFrameReference);
 
             /** Initialize IR data **/
             IInfraredFrameReference *irFrameReference = nullptr;
             hr = m_MultiSourceFrame->get_InfraredFrameReference(&irFrameReference);
             if (SUCCEEDED(hr)) {
                 hr = irFrameReference->AcquireFrame(&m_IRFrame);
+                if (SUCCEEDED(hr)) {
+                    updateIRFrameData();
+                }
             }
             else {
                 safeRelease(m_IRFrame);
             }
-            safeRelease(irFrameReference);
 
-            updateBodyFrame();
-            updateColorFrameData();
-            updateDepthFrameData();
-            updateBodyIndexFrameData();
-            updateIRFrameData();
+            // Safe release frame descriptions
+            safeRelease(depthFrameReference);
+            safeRelease(colorFrameReference);
+            safeRelease(bodyIndexFrameReference);
+            safeRelease(bodyFrameReference);
+            safeRelease(irFrameReference);
 
             // Release the frame descriptions
             safeRelease(m_DepthFrameInfo.frameDescription);
@@ -730,9 +742,9 @@ HRESULT KinectHandler::updateBodyFrame()
         return E_FAIL;
     }
 
-    HRESULT hr = m_BodyFrame->get_FloorClipPlane(&m_BodyFrameInfo.floorClipPlane);
+    HRESULT hr = m_BodyFrame->get_RelativeTime(&m_BodyFrameInfo.time);
     if (SUCCEEDED(hr)) {
-        hr = m_BodyFrame->get_RelativeTime(&m_BodyFrameInfo.time);
+        hr = m_BodyFrame->get_FloorClipPlane(&m_BodyFrameInfo.floorClipPlane);
         IBody *bodies[BODY_COUNT] = {nullptr};
 
         if (SUCCEEDED(hr)) {
