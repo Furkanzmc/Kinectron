@@ -88,6 +88,8 @@ public:
 
     PointF mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoint);
 
+    unsigned int getInitType() const;
+
     /** Stream Getters **/
 
     const unsigned char *getColorData() const;
