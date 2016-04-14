@@ -1,6 +1,6 @@
 #ifndef KINECTHANDLER_H
 #define KINECTHANDLER_H
-#include "KinectUtilsTypes.h"
+#include "KinectronTypes.h"
 #include <map>
 
 class KinectHandler

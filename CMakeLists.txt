@@ -1,14 +1,14 @@
-project(KinectUtils)
+project(Kinectron)
 cmake_minimum_required(VERSION 2.8)
 set(KINECT_UTILS_VERSION 1.0)
-message("NOTICE [KinectUtils]: Using KinectUtils v" ${KINECT_UTILS_VERSION})
+message("NOTICE [Kinectron]: Using Kinectron v" ${KINECT_UTILS_VERSION})
 
 # Try to find Kinect
 if(AR STREQUAL "x64" OR AR STREQUAL "x86")
-    message("NOTICE [KinectUtils]: Using libraries for ${AR}")
+    message("NOTICE [Kinectron]: Using libraries for ${AR}")
 else()
     set(AR x86)
-    message("NOTICE [KinectUtils]: Architecture is not set. Defaulting to x86")
+    message("NOTICE [Kinectron]: Architecture is not set. Defaulting to x86")
 endif()
 
 set(KINECT_ENABLED OFF CACHE BOOL "Kinect 2.x SDK found")
@@ -21,17 +21,17 @@ if(WIN32)
         if(EXISTS $ENV{KINECTSDK20_DIR}/inc)
             set(KinectSDK2_INCLUDE_DIRS $ENV{KINECTSDK20_DIR}/inc CACHE PATH "Kinect v2 inclue path" FORCE)
         else()
-            message("ERROR [KinectUtils]: Kinect includes files cannot be found!")
+            message("ERROR [Kinectron]: Kinect includes files cannot be found!")
         endif()
         if(EXISTS $ENV{KINECTSDK20_DIR}/lib/${AR}/)
             set(KinectSDK2_LIBRARY_DIRS $ENV{KINECTSDK20_DIR}/lib/${AR}/ CACHE PATH "Kinect v2 library dirs" FORCE)
         else()
-            message("ERROR [KinectUtils]: Kinect ${AR} library dir cannot be found")
+            message("ERROR [Kinectron]: Kinect ${AR} library dir cannot be found")
         endif()
         if(EXISTS $ENV{KINECTSDK20_DIR}/lib/${AR}/Kinect20.lib)
             set(KINECT_LIB $ENV{KINECTSDK20_DIR}/lib/${AR}/Kinect20.lib CACHE PATH "Kinect v2 library path" FORCE)
         else()
-            message("ERROR [KinectUtils]: Kinect ${AR} library file cannot be found")
+            message("ERROR [Kinectron]: Kinect ${AR} library file cannot be found")
         endif()
     endif()
 else()
@@ -43,7 +43,7 @@ set(KINECT_UTILS_INC
     ${KINECT_UTILS_ROOT}
     ${KinectSDK2_INCLUDE_DIRS}
     ${KINECT_UTILS_ROOT}/Detectors
-    CACHE LIST "Set the list of include paths for KinectUtils")
+    CACHE LIST "Set the list of include paths for Kinectron")
 
 include_directories(${KINECT_UTILS_INC})
 
@@ -59,7 +59,7 @@ if(KINECT_ENABLED)
     GePoTool.h
     Detectors/GestureDetectorBase.h
     SkeletonSmoother.h
-    KinectUtilsTypes.h
+    KinectronTypes.h
   )
 
 #Append Gesture Detectors
@@ -93,7 +93,7 @@ if(KINECT_ENABLED)
     Detectors/SquatDetector.h
   )
 else()
-    message("ERROR [KinectUtils]: Kinect SDK cannot be found so it is not enabled.")
+    message("ERROR [Kinectron]: Kinect SDK cannot be found so it is not enabled.")
 endif(KINECT_ENABLED)
 
 add_library(kinect_utils STATIC
