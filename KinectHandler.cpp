@@ -207,12 +207,12 @@ void KinectHandler::updateSensor()
 {
     std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
     std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
-    const float frameRate = 1.f / 30.f;
+    const double frameRate = 1.0 / 30.0;
     while (m_IsSensorClosed == false) {
         std::lock_guard<std::recursive_mutex> lock(m_Mutex);
         // Kinect does not support more than 30 frames per second, so don't update more than that.
         now = std::chrono::high_resolution_clock::now();
-        if (std::chrono::duration<float>(now - start).count() < frameRate || m_MultiSourceFrameReader == nullptr) {
+        if (std::chrono::duration<double>(now - start).count() < frameRate || m_MultiSourceFrameReader == nullptr) {
             continue;
         }
         start = std::chrono::high_resolution_clock::now();
