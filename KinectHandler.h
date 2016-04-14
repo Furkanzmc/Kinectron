@@ -180,7 +180,7 @@ private:
 
     ICoordinateMapper *m_CoordinateMapper;
 
-    FrameSourceTypes m_InitType;
+    unsigned int m_InitType;
 
     std::thread m_ThreadUpdate, m_ThreadScreenshot;
     std::recursive_mutex m_Mutex;

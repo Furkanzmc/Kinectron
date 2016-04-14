@@ -80,6 +80,7 @@ HRESULT KinectHandler::initializeDefaultSensor(const unsigned int &initeType)
         if (SUCCEEDED(hr)) {
             // Set this to false to not prevent the KinectHandler::updateSensor from running
             m_IsSensorClosed = false;
+            m_InitType = initeType;
             m_ThreadUpdate = std::thread(&KinectHandler::updateSensor, this);
         }
     }
@@ -201,6 +202,11 @@ PointF KinectHandler::mapBodyPointToScreenPoint(const CameraSpacePoint &bodyPoin
     }
 
     return screenPos;
+}
+
+unsigned int KinectHandler::getInitType() const
+{
+    return m_InitType;
 }
 
 const unsigned char *KinectHandler::getColorData() const
