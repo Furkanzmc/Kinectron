@@ -378,14 +378,7 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
                 Joint joints[JointType_Count];
                 hr = body->GetJoints(_countof(joints), joints);
 
-                // Get the joints once in here and use it anywhere else for the same frame.
-                if (SUCCEEDED(SUCCEEDED(hr))) {
-                    UINT64 trackingID = 0;
-                    hr = body->get_TrackingId(&trackingID);
-                    if (SUCCEEDED(hr)) {
-                        m_AllJoints[trackingID] = joints;
-                    }
-
+                if (SUCCEEDED(hr)) {
                     if (m_MaxBodyDistance > 0.f) {
                         if (joints[JointType_SpineBase].Position.Z < m_MaxBodyDistance) {
                             visibleBodies[i] = body;
@@ -405,8 +398,6 @@ void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody
     if (onProcessBody) {
         onProcessBody(visibleBodies, delta);
     }
-
-    m_AllJoints.clear();
 }
 
 void KinectHandler::processClosestBodyConstraint(std::array<IBody *, BODY_COUNT> &visibleBodies)
@@ -429,13 +420,10 @@ void KinectHandler::processClosestBodyConstraint(std::array<IBody *, BODY_COUNT>
                     continue;
                 }
 
-                UINT64 trackingID = 0;
-                UINT64 closestTrackingID = 0;
-                body->get_TrackingId(&trackingID);
-                closestBody->get_TrackingId(&closestTrackingID);
-
-                const Joint *jointsOne = m_AllJoints.at(trackingID);
-                const Joint *jointsClosest = m_AllJoints.at(closestTrackingID);
+                Joint jointsOne[JointType_Count];
+                Joint jointsClosest[JointType_Count];
+                body->GetJoints(_countof(jointsOne), jointsOne);
+                closestBody->GetJoints(_countof(jointsClosest), jointsClosest);
 
                 const CameraSpacePoint spineMidPosOne = jointsOne[JointType_SpineMid].Position;
                 const CameraSpacePoint spineMidPosClosest = jointsClosest[JointType_SpineMid].Position;
@@ -477,13 +465,10 @@ bool KinectHandler::sortBodyZDesc(IBody *bodyOne, IBody *bodyTwo) const
         return false;
     }
 
-    UINT64 trackingIDOne = 0;
-    UINT64 trackingIDTwo = 0;
-    bodyOne->get_TrackingId(&trackingIDOne);
-    bodyTwo->get_TrackingId(&trackingIDTwo);
-
-    const Joint *jointsOne = m_AllJoints.at(trackingIDOne);
-    const Joint *jointsTwo = m_AllJoints.at(trackingIDTwo);
+    Joint jointsOne[JointType_Count];
+    Joint jointsTwo[JointType_Count];
+    bodyOne->GetJoints(_countof(jointsOne), jointsOne);
+    bodyTwo->GetJoints(_countof(jointsTwo), jointsTwo);
 
     const CameraSpacePoint spineMidPosOne = jointsOne[JointType_Head].Position;
     const CameraSpacePoint spineMidPosTwo = jointsTwo[JointType_Head].Position;
@@ -504,13 +489,10 @@ bool KinectHandler::sortBodyXAsc(IBody *bodyOne, IBody *bodyTwo) const
         return false;
     }
 
-    UINT64 trackingIDOne = 0;
-    UINT64 trackingIDTwo = 0;
-    bodyOne->get_TrackingId(&trackingIDOne);
-    bodyTwo->get_TrackingId(&trackingIDTwo);
-
-    const Joint *jointsOne = m_AllJoints.at(trackingIDOne);
-    const Joint *jointsTwo = m_AllJoints.at(trackingIDTwo);
+    Joint jointsOne[JointType_Count];
+    Joint jointsTwo[JointType_Count];
+    bodyOne->GetJoints(_countof(jointsOne), jointsOne);
+    bodyTwo->GetJoints(_countof(jointsTwo), jointsTwo);
 
     const CameraSpacePoint spineMidPosOne = jointsOne[JointType_Head].Position;
     const CameraSpacePoint spineMidPosTwo = jointsTwo[JointType_Head].Position;
@@ -523,8 +505,6 @@ bool KinectHandler::sortBodyXAsc(IBody *bodyOne, IBody *bodyTwo) const
 
 bool KinectHandler::sortBodyCenter(IBody *bodyOne, IBody *bodyTwo) const
 {
-    //FIXME: Using m_AllJoints gives mixed results
-
     bool isOnLeft = false;
     if (bodyOne == nullptr && bodyTwo != nullptr) {
         return false;
@@ -538,8 +518,8 @@ bool KinectHandler::sortBodyCenter(IBody *bodyOne, IBody *bodyTwo) const
 
     Joint jointsOne[JointType_Count];
     Joint jointsTwo[JointType_Count];
-    HRESULT hr = bodyOne->GetJoints(_countof(jointsOne), jointsOne);
-    hr = bodyTwo->GetJoints(_countof(jointsTwo), jointsTwo);
+    bodyOne->GetJoints(_countof(jointsOne), jointsOne);
+    bodyTwo->GetJoints(_countof(jointsTwo), jointsTwo);
 
     const CameraSpacePoint spineMidPosOne = jointsOne[JointType_Head].Position;
     const CameraSpacePoint spineMidPosTwo = jointsTwo[JointType_Head].Position;
@@ -552,8 +532,6 @@ bool KinectHandler::sortBodyCenter(IBody *bodyOne, IBody *bodyTwo) const
 
 bool KinectHandler::sortBodyCenterAndZDesc(IBody *bodyOne, IBody *bodyTwo) const
 {
-    //FIXME: Using m_AllJoints gives mixed results
-
     bool isOnLeft = false;
     if (bodyOne == nullptr && bodyTwo != nullptr) {
         return false;

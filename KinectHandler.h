@@ -220,12 +220,6 @@ private:
     IRFrameInfo m_IRFrameInfo;
     BodyFrameInfo m_BodyFrameInfo;
 
-    /**
-     * @brief This map is filled in the beginning of each frame and freed at the end of each frame.
-     * This represents the joints of the available skeletons in the current frame. This is not meant to be shared with outside of the class.
-     */
-    std::map<UINT64, Joint *> m_AllJoints;
-
 private:
     /**
      * @brief Updates the sensor 30 times per second.
