@@ -24,7 +24,7 @@ public:
 
     /**
      * @brief Bodies are provided in a sorted way. Bodies are sorted from left to right on the X-axis. Take the data and run the function you want
-     * in OpenGL thread
+     * in main thread
      * Parameters are body, sensor time, visible body count, index.
      */
     std::function<void(const std::array<IBody *, BODY_COUNT>&, UINT64)> onProcessBody;
