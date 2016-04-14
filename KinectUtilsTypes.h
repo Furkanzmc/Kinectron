@@ -36,10 +36,6 @@ struct DepthFrameInfo {
     ~DepthFrameInfo()
     {
         safeRelease(frameDescription);
-        if (buffer) {
-            delete[] buffer;
-            buffer = nullptr;
-        }
 
         if (bufferRGB) {
             delete[] bufferRGB;
@@ -80,9 +76,9 @@ struct BodyIndexFrameInfo {
     ~BodyIndexFrameInfo()
     {
         safeRelease(frameDescription);
-        if (buffer) {
-            delete[] buffer;
-            buffer = nullptr;
+        if (bufferRGB) {
+            delete[] bufferRGB;
+            bufferRGB = nullptr;
         }
     }
 
@@ -104,10 +100,6 @@ struct IRFrameInfo {
     ~IRFrameInfo()
     {
         safeRelease(frameDescription);
-        if (buffer) {
-            delete[] buffer;
-            buffer = nullptr;
-        }
 
         if (bufferRGB) {
             delete[] bufferRGB;
