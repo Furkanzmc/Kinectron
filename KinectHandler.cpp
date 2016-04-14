@@ -591,7 +591,11 @@ HRESULT KinectHandler::updateColorFrameData(ColorFrameInfo &colorFrameInfo, ICol
         return E_FAIL;
     }
 
-    HRESULT hr = colorFrame->get_FrameDescription(&colorFrameInfo.frameDescription);
+    HRESULT hr = colorFrame->get_RelativeTime(&colorFrameInfo.time);
+
+    if (SUCCEEDED(hr)) {
+        hr = colorFrame->get_FrameDescription(&colorFrameInfo.frameDescription);
+    }
     if (SUCCEEDED(hr)) {
         hr = colorFrameInfo.frameDescription->get_Width(&colorFrameInfo.width);
     }
