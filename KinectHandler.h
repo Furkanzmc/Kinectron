@@ -96,8 +96,12 @@ public:
     const RGBQUAD *getColorDataRGB() const;
     bool isColorDataAvailable() const;
 
-    const unsigned short *getDepthData() const;
+    const unsigned short *getDepthDataRGB() const;
+    const UINT16 *getDepthData() const;
     bool isDepthDataAvailable() const;
+
+    bool isDepthToRGBConversionEnabled() const;
+    void setDepthToRGBConversionEnabled(bool enabled);
 
     const unsigned short *getBodyIndexData() const;
     bool isBodyIndexDataAvailable() const;

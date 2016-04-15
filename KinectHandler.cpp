@@ -224,9 +224,14 @@ bool KinectHandler::isColorDataAvailable() const
     return m_IsColorDataAvailable;
 }
 
-const unsigned short *KinectHandler::getDepthData() const
+const unsigned short *KinectHandler::getDepthDataRGB() const
 {
     return reinterpret_cast<unsigned short *>(m_DepthFrameInfo.bufferRGB);
+}
+
+const UINT16 *KinectHandler::getDepthData() const
+{
+    return m_DepthFrameInfo.buffer;
 }
 
 bool KinectHandler::isDepthDataAvailable() const
