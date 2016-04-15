@@ -888,6 +888,11 @@ void KinectHandler::setIRSourceValueMax(float maxVal)
     m_IRFrameInfo.sourceValueMaximum = maxVal;
 }
 
+void KinectHandler::resetIRSourceValueMax()
+{
+    m_IRFrameInfo.sourceValueMaximum = static_cast<float>(USHRT_MAX);
+}
+
 float KinectHandler::getIRSourceValueMax() const
 {
     return m_IRFrameInfo.sourceValueMaximum;
@@ -896,6 +901,11 @@ float KinectHandler::getIRSourceValueMax() const
 void KinectHandler::setIROutputValueMin(float minVal)
 {
     m_IRFrameInfo.outputValueMinimum = minVal;
+}
+
+void KinectHandler::resetIROutputValueMin()
+{
+    m_IRFrameInfo.outputValueMinimum = 0.01f;
 }
 
 float KinectHandler::getIROutputValueMin() const
@@ -908,6 +918,11 @@ void KinectHandler::setIROutputValueMax(float maxVal)
     m_IRFrameInfo.outputValueMaximum = maxVal;
 }
 
+void KinectHandler::resetIROutputValueMax()
+{
+    m_IRFrameInfo.outputValueMaximum = 1.0f;
+}
+
 float KinectHandler::getIROutputValueMax() const
 {
     return m_IRFrameInfo.outputValueMaximum;
@@ -918,6 +933,11 @@ void KinectHandler::setIRSceneValueAvg(float avgVal)
     m_IRFrameInfo.sceneValueAverage = avgVal;
 }
 
+void KinectHandler::resetIRSceneValueAvg()
+{
+    m_IRFrameInfo.sceneValueAverage = 0.08f;
+}
+
 float KinectHandler::getIRSceneValueAvg() const
 {
     return m_IRFrameInfo.sceneValueAverage;
@@ -926,6 +946,11 @@ float KinectHandler::getIRSceneValueAvg() const
 void KinectHandler::setIRSceneStandartDeviations(float deviation)
 {
     m_IRFrameInfo.sceneStandardDeviations = deviation;
+}
+
+void KinectHandler::resetIRSceneStandartDeviations()
+{
+    m_IRFrameInfo.sceneStandardDeviations = 3.0f;
 }
 
 float KinectHandler::getIRSceneStandartDeviations() const

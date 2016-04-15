@@ -144,18 +144,23 @@ public:
     /** IR Properties **/
 
     void setIRSourceValueMax(float maxVal);
+    void resetIRSourceValueMax();
     float getIRSourceValueMax() const;
 
     void setIROutputValueMin(float minVal);
+    void resetIROutputValueMin();
     float getIROutputValueMin() const;
 
     void setIROutputValueMax(float maxVal);
+    void resetIROutputValueMax();
     float getIROutputValueMax() const;
 
     void setIRSceneValueAvg(float avgVal);
+    void resetIRSceneValueAvg();
     float getIRSceneValueAvg() const;
 
     void setIRSceneStandartDeviations(float deviation);
+    void resetIRSceneStandartDeviations();
     float getIRSceneStandartDeviations() const;
 
     /** Depth Property Getters **/
