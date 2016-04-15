@@ -148,7 +148,7 @@ KinectHandler &GePoTool::getKinectHandler()
     return *m_KinectHandler;
 }
 
-IBody *GePoTool::getBody(const BodyIndex &player)
+IBody *GePoTool::getBody(const BodyIndex &player) const
 {
     if (m_Bodies.size() <= player || m_Bodies.size() == 0) {
         return nullptr;
@@ -494,8 +494,26 @@ Vector4 GePoTool::getJointOrientation(IBody *body, JointType joint) const
     }
 
     JointOrientation joints[JointType_Count];
-    body->GetJointOrientations(_countof(joints), joints);
-    return joints[joint].Orientation;
+    HRESULT hr = body->GetJointOrientations(_countof(joints), joints);
+    if (SUCCEEDED(hr)) {
+        return joints[joint].Orientation;
+    }
+
+    return Vector4();
+}
+
+HRESULT GePoTool::getJointOrientations(IBody *body, JointOrientation *orientations) const
+{
+    if (body == nullptr || orientations == nullptr || isBodyTracked(body) == false) {
+        return E_FAIL;
+    }
+
+    return body->GetJointOrientations(JointType_Count, orientations);
+}
+
+HRESULT GePoTool::getJointOrientations(const BodyIndex &bodyIndex, JointOrientation *orientations) const
+{
+    return getJointOrientations(getBody(bodyIndex), orientations);
 }
 
 CameraSpacePoint GePoTool::getJointPosition(IBody *body, JointType joint) const
@@ -511,6 +529,25 @@ CameraSpacePoint GePoTool::getJointPosition(IBody *body, JointType joint) const
         position = joints[joint].Position;
     }
     return position;
+}
+
+CameraSpacePoint GePoTool::getJointPosition(const BodyIndex &bodyIndex, JointType joint) const
+{
+    return getJointPosition(getBody(bodyIndex), joint);
+}
+
+HRESULT GePoTool::getJoints(IBody *body, Joint *joints) const
+{
+    if (body == nullptr || joints == nullptr || isBodyTracked(body) == false) {
+        return E_FAIL;
+    }
+
+    return body->GetJoints(JointType_Count, joints);
+}
+
+HRESULT GePoTool::getJoints(const BodyIndex &bodyIndex, Joint *joints) const
+{
+    return getJoints(getBody(bodyIndex), joints);
 }
 
 float GePoTool::getAngleBetweenTwoPoints(const CameraSpacePoint &pointOne, const CameraSpacePoint &pointTwo) const

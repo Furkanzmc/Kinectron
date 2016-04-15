@@ -73,7 +73,7 @@ public:
      * @param player
      * @return
      */
-    IBody *getBody(const BodyIndex &player);
+    IBody *getBody(const BodyIndex &player) const;
 
     /**
      * @brief Returns the body with the given tracking id, If the id cannot be found returns nullptr
@@ -166,7 +166,27 @@ public:
     float toRadian(const float &degree) const;
 
     Vector4 getJointOrientation(IBody *body, JointType joint) const;
+
+    /**
+     * @brief Fills orientations array with orientation information, expects an array with the size JointType_Count
+     * @param body
+     * @param orientations
+     * @return
+     */
+    HRESULT getJointOrientations(IBody *body, JointOrientation *orientations) const;
+    HRESULT getJointOrientations(const BodyIndex &bodyIndex, JointOrientation *orientations) const;
+
     CameraSpacePoint getJointPosition(IBody *body, JointType joint) const;
+    CameraSpacePoint getJointPosition(const BodyIndex &bodyIndex, JointType joint) const;
+
+    /**
+     * @brief Fills joints array with joint information, expects an array with the size JointType_Count
+     * @param body
+     * @param joints
+     * @return
+     */
+    HRESULT getJoints(IBody *body, Joint *joints) const;
+    HRESULT getJoints(const BodyIndex &bodyIndex, Joint *joints) const;
 
     /**
      * @brief Returns the angle between two camera space points in degrees
