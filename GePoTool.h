@@ -13,6 +13,17 @@ class GePoTool
 {
 public:
     struct BodyRect {
+        BodyRect(float posx, float posy, float w, float h)
+            : x(posx)
+            , y(posy)
+            , width(w)
+            , height(h)
+        {
+
+        }
+
+        BodyRect() = default;
+
         float x = 0, y = 0, width = 0, height = 0;
     };
 
