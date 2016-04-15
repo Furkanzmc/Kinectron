@@ -75,7 +75,7 @@ void GePoTool::processBodyNotificitons(const std::array<IBody *, BODY_COUNT> &bo
 
             bool isBodyAlreadyExist = false;
             for (unsigned int newBodyIndex = 0; newBodyIndex < bodyArray.size(); newBodyIndex++) {
-                if (bodyArray.at(newBodyIndex)) {
+                if (bodyArray.at(newBodyIndex) == nullptr) {
                     continue;
                 }
 
