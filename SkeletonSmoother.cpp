@@ -68,11 +68,13 @@ void SkeletonSmoother::updateJointPositions(const unsigned int &bodyIndex, const
         JointProp &prop = jointPositions.at(jointIndex);
         prop.spacePoint = joints[jointIndex].Position;
         prop.type = static_cast<JointType>(jointIndex);
+
         if (pointEquals(prop.pos, pointZero()) || prop.isDirty) {
             prop.pos.X = screenPos.X * m_PositionScale.X;
             prop.pos.Y = screenPos.Y * m_PositionScale.Y;
             prop.isDirty = false;
         }
+
         prop.attractionPoint.X = screenPos.X * m_PositionScale.X;
         prop.attractionPoint.Y = screenPos.Y * m_PositionScale.Y;
     }
