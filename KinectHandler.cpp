@@ -23,10 +23,10 @@ KinectHandler::KinectHandler()
     , m_BodyIndexFrame(nullptr)
     , m_BodyFrame(nullptr)
     , m_IRFrame(nullptr)
-#if KINECTRON_MULTI_THREAD == 0
+#if KINECTRON_SINGLE_THREAD
     , m_MSWaitableHandle(NULL)
     , m_MSHandle(NULL)
-#endif // KINECTRON_MULTI_THREAD == 0
+#endif // KINECTRON_SINGLE_THREAD
     , m_CoordinateMapper(nullptr)
     , m_InitType(FrameSourceTypes_None)
     , m_ClosestBodyID(0)
@@ -49,11 +49,11 @@ KinectHandler::~KinectHandler()
         m_Sensor->Close();
         safeRelease(m_Sensor);
     }
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     if (m_ThreadUpdate.joinable()) {
         m_ThreadUpdate.join();
     }
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
     if (m_ThreadScreenshot.joinable()) {
         m_ThreadScreenshot.join();
@@ -86,20 +86,21 @@ HRESULT KinectHandler::initializeDefaultSensor(const unsigned int &initeType)
             hr = m_Sensor->OpenMultiSourceFrameReader(initeType, &m_MultiSourceFrameReader);
         }
 
-#if KINECTRON_MULTI_THREAD == 0
+#if KINECTRON_SINGLE_THREAD
         if (SUCCEEDED(hr)) {
             hr = m_MultiSourceFrameReader->SubscribeMultiSourceFrameArrived(&m_MSWaitableHandle);
         }
-#endif // KINECTRON_MULTI_THREAD == 0
+#endif // KINECTRON_SINGLE_THREAD
 
         if (SUCCEEDED(hr)) {
-            m_MSHandle = reinterpret_cast<HANDLE>(m_MSWaitableHandle);
             // Set this to false to not prevent the KinectHandler::updateSensor from running
             m_IsSensorClosed = false;
             m_InitType = initeType;
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
             m_ThreadUpdate = std::thread(&KinectHandler::threadedUpdate, this);
-#endif // KINECTRON_MULTI_THREAD
+#else
+            m_MSHandle = reinterpret_cast<HANDLE>(m_MSWaitableHandle);
+#endif // KINECTRON_SINGLE_THREAD == 0
         }
     }
 
@@ -119,29 +120,29 @@ bool KinectHandler::isKinectAvailable()
 
 HRESULT KinectHandler::closeSensor()
 {
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
     m_IsSensorClosed = true;
     return m_Sensor->Close();
 }
 
 void KinectHandler::reset()
 {
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
     if (m_Sensor) {
         closeSensor();
         safeRelease(m_Sensor);
     }
 
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     if (m_ThreadUpdate.joinable()) {
         m_ThreadUpdate.join();
     }
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
     if (m_ThreadScreenshot.joinable()) {
         m_ThreadScreenshot.join();
@@ -170,7 +171,7 @@ void KinectHandler::reset()
     m_BodyFrameInfo.reset();
 }
 
-#if KINECTRON_MULTI_THREAD == 0
+#if KINECTRON_SINGLE_THREAD
 void KinectHandler::update()
 {
     // FRAME_RATE is in seconds, so multiply with 1000 to get millisecons
@@ -180,7 +181,7 @@ void KinectHandler::update()
 
     updateStreams();
 }
-#endif // KINECTRON_MULTI_THREAD == 0
+#endif // KINECTRON_SINGLE_THREAD
 
 void KinectHandler::takeSnapshot(const std::string &filePath)
 {
@@ -295,7 +296,7 @@ bool KinectHandler::isIRDataAvailable() const
     return m_IsIRDataAvailable;
 }
 
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
 void KinectHandler::threadedUpdate()
 {
     std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
@@ -309,12 +310,11 @@ void KinectHandler::threadedUpdate()
         }
         start = std::chrono::high_resolution_clock::now();
 
-
         std::lock_guard<std::recursive_mutex> lock(m_Mutex);
         updateStreams();
     }
 }
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
 void KinectHandler::updateStreams()
 {
@@ -419,9 +419,9 @@ void KinectHandler::updateStreams()
 
 void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody **bodies)
 {
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
     HRESULT hr = E_FAIL;
     std::array<IBody *, BODY_COUNT> visibleBodies;
@@ -623,9 +623,9 @@ bool KinectHandler::sortBodyCenterAndZDesc(IBody *bodyOne, IBody *bodyTwo) const
 
 HRESULT KinectHandler::updateDepthFrameData()
 {
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
     if (m_DepthFrame == nullptr) {
         return E_FAIL;
@@ -692,9 +692,9 @@ HRESULT KinectHandler::updateDepthFrameData()
 
 HRESULT KinectHandler::updateColorFrameData()
 {
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
     if (m_ColorFrame == nullptr) {
         return E_FAIL;
@@ -743,9 +743,9 @@ HRESULT KinectHandler::updateColorFrameData()
 
 HRESULT KinectHandler::updateBodyIndexFrameData()
 {
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
     if (m_BodyIndexFrame == nullptr) {
         return E_FAIL;
@@ -797,9 +797,9 @@ HRESULT KinectHandler::updateBodyIndexFrameData()
 
 HRESULT KinectHandler::updateBodyFrame()
 {
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
     if (m_BodyFrame == nullptr) {
         return E_FAIL;
@@ -823,9 +823,9 @@ HRESULT KinectHandler::updateBodyFrame()
 
 HRESULT KinectHandler::updateIRFrameData()
 {
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
     if (m_IRFrame == nullptr) {
         return E_FAIL;

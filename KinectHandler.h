@@ -79,9 +79,9 @@ public:
      */
     void reset();
 
-#if KINECTRON_MULTI_THREAD == 0
+#if KINECTRON_SINGLE_THREAD
     void update();
-#endif // #if KINECTRON_MULTI_THREAD
+#endif // #if KINECTRON_SINGLE_THREAD
 
     /**
      * @brief Calls the onTakeScreenshot function in a different thread with the given file path
@@ -198,21 +198,19 @@ private:
     IBodyFrame *m_BodyFrame;
     IInfraredFrame *m_IRFrame;
 
-#if KINECTRON_MULTI_THREAD == 0
+#if KINECTRON_SINGLE_THREAD
     WAITABLE_HANDLE m_MSWaitableHandle;
     HANDLE m_MSHandle;
-#endif // KINECTRON_MULTI_THREAD == 0
+#endif // KINECTRON_SINGLE_THREAD
     ICoordinateMapper *m_CoordinateMapper;
 
     unsigned int m_InitType;
 
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     std::thread m_ThreadUpdate;
-#endif // KINECTRON_MULTI_THREAD
-    std::thread m_ThreadScreenshot;
-#if KINECTRON_MULTI_THREAD
     std::recursive_mutex m_Mutex;
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
+    std::thread m_ThreadScreenshot;
 
     /**
      * @brief Tracking ID for the closest skeleton on the Z-axis
@@ -248,12 +246,12 @@ private:
     BodyFrameInfo m_BodyFrameInfo;
 
 private:
-#if KINECTRON_MULTI_THREAD
+#if KINECTRON_SINGLE_THREAD == 0
     /**
      * @brief Updates the sensor in a different thread
      */
     void threadedUpdate();
-#endif // KINECTRON_MULTI_THREAD
+#endif // KINECTRON_SINGLE_THREAD == 0
 
     void updateStreams();
 
