@@ -49,6 +49,11 @@ public:
     static const unsigned int IR_HEIGHT = DEPTH_HEIGHT;
     static const unsigned int DATA_LENGTH_IR = DATA_LENGTH_DEPTH;
 
+    /**
+     * @brief Frame rate in seconds
+     */
+    static const double FRAME_RATE;
+
 public:
     KinectHandler();
     ~KinectHandler();
@@ -73,6 +78,10 @@ public:
      * @brief Closes the sensor, terminates the threads, releases the frames and resets the frame infos
      */
     void reset();
+
+#if KINECTRON_MULTI_THREAD == 0
+    void update();
+#endif // #if KINECTRON_MULTI_THREAD
 
     /**
      * @brief Calls the onTakeScreenshot function in a different thread with the given file path
@@ -189,12 +198,20 @@ private:
     IBodyFrame *m_BodyFrame;
     IInfraredFrame *m_IRFrame;
 
+#if KINECTRON_MULTI_THREAD == 0
+    WAITABLE_HANDLE m_MultiSourceEvent;
+#endif // KINECTRON_MULTI_THREAD == 0
     ICoordinateMapper *m_CoordinateMapper;
 
     unsigned int m_InitType;
 
-    std::thread m_ThreadUpdate, m_ThreadScreenshot;
+#if KINECTRON_MULTI_THREAD
+    std::thread m_ThreadUpdate;
+#endif // KINECTRON_MULTI_THREAD
+    std::thread m_ThreadScreenshot;
+#if KINECTRON_MULTI_THREAD
     std::recursive_mutex m_Mutex;
+#endif // KINECTRON_MULTI_THREAD
 
     /**
      * @brief Tracking ID for the closest skeleton on the Z-axis
@@ -230,10 +247,14 @@ private:
     BodyFrameInfo m_BodyFrameInfo;
 
 private:
+#if KINECTRON_MULTI_THREAD
     /**
-     * @brief Updates the sensor 30 times per second.
+     * @brief Updates the sensor in a different thread
      */
-    void updateSensor();
+    void threadedUpdate();
+#endif // KINECTRON_MULTI_THREAD
+
+    void updateStreams();
 
     /**
      * @brief Sorts the bodies from left to right and then feeds them to m_ProcessBodyFunc

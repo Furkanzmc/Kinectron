@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <string>
 
+const double KinectHandler::FRAME_RATE = 1.0 / 30.0;
+
 KinectHandler::KinectHandler()
     : m_IsColorDataAvailable(false)
     , m_IsDepthDataAvailable(false)
@@ -21,6 +23,9 @@ KinectHandler::KinectHandler()
     , m_BodyIndexFrame(nullptr)
     , m_BodyFrame(nullptr)
     , m_IRFrame(nullptr)
+#if KINECTRON_MULTI_THREAD == 0
+    , m_MultiSourceEvent(NULL)
+#endif // KINECTRON_MULTI_THREAD == 0
     , m_CoordinateMapper(nullptr)
     , m_InitType(FrameSourceTypes_None)
     , m_ClosestBodyID(0)
@@ -43,10 +48,11 @@ KinectHandler::~KinectHandler()
         m_Sensor->Close();
         safeRelease(m_Sensor);
     }
-
+#if KINECTRON_MULTI_THREAD
     if (m_ThreadUpdate.joinable()) {
         m_ThreadUpdate.join();
     }
+#endif // KINECTRON_MULTI_THREAD
 
     if (m_ThreadScreenshot.joinable()) {
         m_ThreadScreenshot.join();
@@ -74,14 +80,24 @@ HRESULT KinectHandler::initializeDefaultSensor(const unsigned int &initeType)
         if (SUCCEEDED(hr)) {
             hr = m_Sensor->Open();
         }
+
         if (SUCCEEDED(hr)) {
             hr = m_Sensor->OpenMultiSourceFrameReader(initeType, &m_MultiSourceFrameReader);
         }
+
+#if KINECTRON_MULTI_THREAD == 0
+        if (SUCCEEDED(hr)) {
+            hr = m_MultiSourceFrameReader->SubscribeMultiSourceFrameArrived(&m_MultiSourceEvent);
+        }
+#endif // KINECTRON_MULTI_THREAD == 0
+
         if (SUCCEEDED(hr)) {
             // Set this to false to not prevent the KinectHandler::updateSensor from running
             m_IsSensorClosed = false;
             m_InitType = initeType;
-            m_ThreadUpdate = std::thread(&KinectHandler::updateSensor, this);
+#if KINECTRON_MULTI_THREAD
+            m_ThreadUpdate = std::thread(&KinectHandler::threadedUpdate, this);
+#endif // KINECTRON_MULTI_THREAD
         }
     }
 
@@ -101,23 +117,29 @@ bool KinectHandler::isKinectAvailable()
 
 HRESULT KinectHandler::closeSensor()
 {
+#if KINECTRON_MULTI_THREAD
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+#endif // KINECTRON_MULTI_THREAD
     m_IsSensorClosed = true;
     return m_Sensor->Close();
 }
 
 void KinectHandler::reset()
 {
+#if KINECTRON_MULTI_THREAD
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+#endif // KINECTRON_MULTI_THREAD
 
     if (m_Sensor) {
         closeSensor();
         safeRelease(m_Sensor);
     }
 
+#if KINECTRON_MULTI_THREAD
     if (m_ThreadUpdate.joinable()) {
         m_ThreadUpdate.join();
     }
+#endif // KINECTRON_MULTI_THREAD
 
     if (m_ThreadScreenshot.joinable()) {
         m_ThreadScreenshot.join();
@@ -145,6 +167,20 @@ void KinectHandler::reset()
     m_IRFrameInfo.reset();
     m_BodyFrameInfo.reset();
 }
+
+#if KINECTRON_MULTI_THREAD == 0
+void KinectHandler::update()
+{
+    HANDLE handles[] = { reinterpret_cast<HANDLE>(m_MultiSourceEvent) };
+
+    // FRAME_RATE is in seconds, so multiply with 1000 to get millisecons
+    if (MsgWaitForMultipleObjects(_countof(handles), handles, false, FRAME_RATE * 1000, QS_ALLINPUT) != WAIT_OBJECT_0) {
+        return;
+    }
+
+    updateStreams();
+}
+#endif // KINECTRON_MULTI_THREAD == 0
 
 void KinectHandler::takeSnapshot(const std::string &filePath)
 {
@@ -259,123 +295,133 @@ bool KinectHandler::isIRDataAvailable() const
     return m_IsIRDataAvailable;
 }
 
-void KinectHandler::updateSensor()
+#if KINECTRON_MULTI_THREAD
+void KinectHandler::threadedUpdate()
 {
     std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
     std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
-    const double frameRate = 1.0 / 30.0;
+
     while (m_IsSensorClosed == false) {
-        std::lock_guard<std::recursive_mutex> lock(m_Mutex);
         // Kinect does not support more than 30 frames per second, so don't update more than that.
         now = std::chrono::high_resolution_clock::now();
-        if (std::chrono::duration<double>(now - start).count() < frameRate || m_MultiSourceFrameReader == nullptr) {
+        if (std::chrono::duration<double>(now - start).count() < FRAME_RATE || m_MultiSourceFrameReader == nullptr) {
             continue;
         }
         start = std::chrono::high_resolution_clock::now();
 
-        m_IsColorDataAvailable = false;
-        m_IsDepthDataAvailable = false;
-        m_IsBodyIndexDataAvailable = false;
-        m_IsIRDataAvailable = false;
 
-        // Safe release the frames before we can use them again
-        safeRelease(m_DepthFrame);
-        safeRelease(m_ColorFrame);
-        safeRelease(m_BodyIndexFrame);
-        safeRelease(m_BodyFrame);
-        safeRelease(m_IRFrame);
-        safeRelease(m_MultiSourceFrame);
+        std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+        updateStreams();
+    }
+}
+#endif // KINECTRON_MULTI_THREAD
 
-        HRESULT hr = m_MultiSourceFrameReader->AcquireLatestFrame(&m_MultiSourceFrame);
+void KinectHandler::updateStreams()
+{
+    m_IsColorDataAvailable = false;
+    m_IsDepthDataAvailable = false;
+    m_IsBodyIndexDataAvailable = false;
+    m_IsIRDataAvailable = false;
 
-        /* If the multi source frame cannot get a frame, it will return FAIL in that case safe release the frame
-         * to later use that to determine If that frame has been requested or not (e.g If m_DepthFrame is a null pointer, then that frame hasn't been requested.)
-         */
+    // Safe release the frames before we can use them again
+    safeRelease(m_DepthFrame);
+    safeRelease(m_ColorFrame);
+    safeRelease(m_BodyIndexFrame);
+    safeRelease(m_BodyFrame);
+    safeRelease(m_IRFrame);
+    safeRelease(m_MultiSourceFrame);
+
+    HRESULT hr = m_MultiSourceFrameReader->AcquireLatestFrame(&m_MultiSourceFrame);
+
+    /* If the multi source frame cannot get a frame, it will return FAIL in that case safe release the frame
+     * to later use that to determine If that frame has been requested or not (e.g If m_DepthFrame is a null pointer, then that frame hasn't been requested.)
+     */
+    if (SUCCEEDED(hr)) {
+        /** Initialize depth stream **/
+        IDepthFrameReference *depthFrameReference = nullptr;
+        hr = m_MultiSourceFrame->get_DepthFrameReference(&depthFrameReference);
         if (SUCCEEDED(hr)) {
-            /** Initialize depth stream **/
-            IDepthFrameReference *depthFrameReference = nullptr;
-            hr = m_MultiSourceFrame->get_DepthFrameReference(&depthFrameReference);
+            hr = depthFrameReference->AcquireFrame(&m_DepthFrame);
             if (SUCCEEDED(hr)) {
-                hr = depthFrameReference->AcquireFrame(&m_DepthFrame);
-                if (SUCCEEDED(hr)) {
-                    updateDepthFrameData();
-                }
+                updateDepthFrameData();
             }
-            else {
-                safeRelease(m_DepthFrame);
-            }
-
-            /** Initialize color stream **/
-            IColorFrameReference *colorFrameReference = nullptr;
-            hr = m_MultiSourceFrame->get_ColorFrameReference(&colorFrameReference);
-            if (SUCCEEDED(hr)) {
-                hr = colorFrameReference->AcquireFrame(&m_ColorFrame);
-                if (SUCCEEDED(hr)) {
-                    updateColorFrameData();
-                }
-            }
-            else {
-                safeRelease(m_ColorFrame);
-            }
-
-            /** Initialize body index stream **/
-            IBodyIndexFrameReference *bodyIndexFrameReference = nullptr;
-            hr = m_MultiSourceFrame->get_BodyIndexFrameReference(&bodyIndexFrameReference);
-            if (SUCCEEDED(hr)) {
-                hr = bodyIndexFrameReference->AcquireFrame(&m_BodyIndexFrame);
-                if (SUCCEEDED(hr)) {
-                    updateBodyIndexFrameData();
-                }
-            }
-            else {
-                safeRelease(m_BodyIndexFrame);
-            }
-
-            /** Initialize body data **/
-            IBodyFrameReference *bodyFrameReference = nullptr;
-            hr = m_MultiSourceFrame->get_BodyFrameReference(&bodyFrameReference);
-            if (SUCCEEDED(hr)) {
-                hr = bodyFrameReference->AcquireFrame(&m_BodyFrame);
-                if (SUCCEEDED(hr)) {
-                    updateBodyFrame();
-                }
-            }
-            else {
-                safeRelease(m_BodyFrame);
-            }
-
-            /** Initialize IR data **/
-            IInfraredFrameReference *irFrameReference = nullptr;
-            hr = m_MultiSourceFrame->get_InfraredFrameReference(&irFrameReference);
-            if (SUCCEEDED(hr)) {
-                hr = irFrameReference->AcquireFrame(&m_IRFrame);
-                if (SUCCEEDED(hr)) {
-                    updateIRFrameData();
-                }
-            }
-            else {
-                safeRelease(m_IRFrame);
-            }
-
-            // Safe release frame descriptions
-            safeRelease(depthFrameReference);
-            safeRelease(colorFrameReference);
-            safeRelease(bodyIndexFrameReference);
-            safeRelease(bodyFrameReference);
-            safeRelease(irFrameReference);
-
-            // Release the frame descriptions
-            safeRelease(m_DepthFrameInfo.frameDescription);
-            safeRelease(m_ColorFrameInfo.frameDescription);
-            safeRelease(m_BodyIndexFrameInfo.frameDescription);
-            safeRelease(m_IRFrameInfo.frameDescription);
         }
+        else {
+            safeRelease(m_DepthFrame);
+        }
+
+        /** Initialize color stream **/
+        IColorFrameReference *colorFrameReference = nullptr;
+        hr = m_MultiSourceFrame->get_ColorFrameReference(&colorFrameReference);
+        if (SUCCEEDED(hr)) {
+            hr = colorFrameReference->AcquireFrame(&m_ColorFrame);
+            if (SUCCEEDED(hr)) {
+                updateColorFrameData();
+            }
+        }
+        else {
+            safeRelease(m_ColorFrame);
+        }
+
+        /** Initialize body index stream **/
+        IBodyIndexFrameReference *bodyIndexFrameReference = nullptr;
+        hr = m_MultiSourceFrame->get_BodyIndexFrameReference(&bodyIndexFrameReference);
+        if (SUCCEEDED(hr)) {
+            hr = bodyIndexFrameReference->AcquireFrame(&m_BodyIndexFrame);
+            if (SUCCEEDED(hr)) {
+                updateBodyIndexFrameData();
+            }
+        }
+        else {
+            safeRelease(m_BodyIndexFrame);
+        }
+
+        /** Initialize body data **/
+        IBodyFrameReference *bodyFrameReference = nullptr;
+        hr = m_MultiSourceFrame->get_BodyFrameReference(&bodyFrameReference);
+        if (SUCCEEDED(hr)) {
+            hr = bodyFrameReference->AcquireFrame(&m_BodyFrame);
+            if (SUCCEEDED(hr)) {
+                updateBodyFrame();
+            }
+        }
+        else {
+            safeRelease(m_BodyFrame);
+        }
+
+        /** Initialize IR data **/
+        IInfraredFrameReference *irFrameReference = nullptr;
+        hr = m_MultiSourceFrame->get_InfraredFrameReference(&irFrameReference);
+        if (SUCCEEDED(hr)) {
+            hr = irFrameReference->AcquireFrame(&m_IRFrame);
+            if (SUCCEEDED(hr)) {
+                updateIRFrameData();
+            }
+        }
+        else {
+            safeRelease(m_IRFrame);
+        }
+
+        // Safe release frame descriptions
+        safeRelease(depthFrameReference);
+        safeRelease(colorFrameReference);
+        safeRelease(bodyIndexFrameReference);
+        safeRelease(bodyFrameReference);
+        safeRelease(irFrameReference);
+
+        // Release the frame descriptions
+        safeRelease(m_DepthFrameInfo.frameDescription);
+        safeRelease(m_ColorFrameInfo.frameDescription);
+        safeRelease(m_BodyIndexFrameInfo.frameDescription);
+        safeRelease(m_IRFrameInfo.frameDescription);
     }
 }
 
 void KinectHandler::processBody(const UINT64 &delta, const int &bodyCount, IBody **bodies)
 {
+#if KINECTRON_MULTI_THREAD
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+#endif // KINECTRON_MULTI_THREAD
 
     HRESULT hr = E_FAIL;
     std::array<IBody *, BODY_COUNT> visibleBodies;
@@ -577,7 +623,10 @@ bool KinectHandler::sortBodyCenterAndZDesc(IBody *bodyOne, IBody *bodyTwo) const
 
 HRESULT KinectHandler::updateDepthFrameData()
 {
+#if KINECTRON_MULTI_THREAD
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+#endif // KINECTRON_MULTI_THREAD
+
     if (m_DepthFrame == nullptr) {
         return E_FAIL;
     }
@@ -643,7 +692,10 @@ HRESULT KinectHandler::updateDepthFrameData()
 
 HRESULT KinectHandler::updateColorFrameData()
 {
+#if KINECTRON_MULTI_THREAD
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+#endif // KINECTRON_MULTI_THREAD
+
     if (m_ColorFrame == nullptr) {
         return E_FAIL;
     }
@@ -691,7 +743,10 @@ HRESULT KinectHandler::updateColorFrameData()
 
 HRESULT KinectHandler::updateBodyIndexFrameData()
 {
+#if KINECTRON_MULTI_THREAD
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+#endif // KINECTRON_MULTI_THREAD
+
     if (m_BodyIndexFrame == nullptr) {
         return E_FAIL;
     }
@@ -742,7 +797,10 @@ HRESULT KinectHandler::updateBodyIndexFrameData()
 
 HRESULT KinectHandler::updateBodyFrame()
 {
+#if KINECTRON_MULTI_THREAD
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+#endif // KINECTRON_MULTI_THREAD
+
     if (m_BodyFrame == nullptr) {
         return E_FAIL;
     }
@@ -765,7 +823,10 @@ HRESULT KinectHandler::updateBodyFrame()
 
 HRESULT KinectHandler::updateIRFrameData()
 {
+#if KINECTRON_MULTI_THREAD
     std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+#endif // KINECTRON_MULTI_THREAD
+
     if (m_IRFrame == nullptr) {
         return E_FAIL;
     }
