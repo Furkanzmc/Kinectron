@@ -2,7 +2,7 @@
 #define GESTUREDETECTORBASE
 #include "Kinect.h"
 #include <string>
-using UID = unsigned int;//Short for Unique ID
+using UID = int;//Short for Unique ID
 
 /**
  * @brief The DGestureBase class
@@ -17,6 +17,7 @@ public:
     };
 
     static const int INVALID_BODY_INDEX = -1;
+    static const int INVALID_TAG = -1;
 
 public:
     const UID &getUniqueID() const
@@ -36,7 +37,7 @@ public:
      */
     const UID &getID() const
     {
-        return m_Tag > 0 ? m_Tag : m_UID;
+        return m_Tag > INVALID_TAG ? m_Tag : m_UID;
     }
 
     const int &getBodyIndex() const
@@ -46,7 +47,7 @@ public:
 
     void setBodyIndex(const unsigned int &bodyIndex)
     {
-        if (bodyIndex > 5) {
+        if (bodyIndex >= BODY_COUNT) {
             return;
         }
 
@@ -85,7 +86,7 @@ protected:
     int m_BodyIndex;//The intial value is -1, so that a check can be done to see if it's been set or not
 
 protected:
-    DGestureBase(const UID &gestureUID, const DETECTION_TYPE &type, const std::string &description, const UID &tag = 0)
+    DGestureBase(const UID &gestureUID, const DETECTION_TYPE &type, const std::string &description, const UID &tag = INVALID_TAG)
         : m_UID(gestureUID)
         , m_Type(type)
         , m_Tag(tag)
@@ -93,7 +94,7 @@ protected:
         , m_BodyIndex(INVALID_BODY_INDEX)
     {}
 
-    DGestureBase(const UID &gestureUID, const DETECTION_TYPE &type, const UID &tag = 0)
+    DGestureBase(const UID &gestureUID, const DETECTION_TYPE &type, const UID &tag = INVALID_TAG)
         : m_UID(gestureUID)
         , m_Type(type)
         , m_Tag(tag)
