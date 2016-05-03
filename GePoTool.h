@@ -234,9 +234,9 @@ public:
      * @return
      */
     template<class DetectorClass>
-    DetectorClass *addDetector(const BodyIndex &player, const UID &customID = 0)
+    DetectorClass *addDetector(const BodyIndex &player, const UID &tag = 0)
     {
-        DetectorClass *detector = new(std::nothrow) DetectorClass(*this, customID);
+        DetectorClass *detector = new(std::nothrow) DetectorClass(*this, tag);
         if (detector) {
             detector->setBodyIndex(player);
             m_Detectors.push_back(detector);
