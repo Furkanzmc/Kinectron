@@ -16,10 +16,6 @@ public:
         POSTURE
     };
 
-    /**
-     * @brief To prevent overlapping with other UIDs, custom ID should start at 1000.
-     */
-    static const UID TAG_START_VALUE = 1000;
     static const int INVALID_BODY_INDEX = -1;
 
 public:
@@ -35,11 +31,12 @@ public:
 
     /**
      * @brief Returns the active ID. If the tag is valid, returns the tag. Otherwise returns UID.
+     * @todo Find a better name for this
      * @return
      */
     const UID &getID() const
     {
-        return m_Tag >= TAG_START_VALUE ? m_Tag : m_UID;
+        return m_Tag > 0 ? m_Tag : m_UID;
     }
 
     const int &getBodyIndex() const
