@@ -199,7 +199,8 @@ private:
     IInfraredFrame *m_IRFrame;
 
 #if KINECTRON_MULTI_THREAD == 0
-    WAITABLE_HANDLE m_MultiSourceEvent;
+    WAITABLE_HANDLE m_MSWaitableHandle;
+    HANDLE m_MSHandle;
 #endif // KINECTRON_MULTI_THREAD == 0
     ICoordinateMapper *m_CoordinateMapper;
 

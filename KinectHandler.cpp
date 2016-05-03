@@ -24,7 +24,8 @@ KinectHandler::KinectHandler()
     , m_BodyFrame(nullptr)
     , m_IRFrame(nullptr)
 #if KINECTRON_MULTI_THREAD == 0
-    , m_MultiSourceEvent(NULL)
+    , m_MSWaitableHandle(NULL)
+    , m_MSHandle(NULL)
 #endif // KINECTRON_MULTI_THREAD == 0
     , m_CoordinateMapper(nullptr)
     , m_InitType(FrameSourceTypes_None)
@@ -87,11 +88,12 @@ HRESULT KinectHandler::initializeDefaultSensor(const unsigned int &initeType)
 
 #if KINECTRON_MULTI_THREAD == 0
         if (SUCCEEDED(hr)) {
-            hr = m_MultiSourceFrameReader->SubscribeMultiSourceFrameArrived(&m_MultiSourceEvent);
+            hr = m_MultiSourceFrameReader->SubscribeMultiSourceFrameArrived(&m_MSWaitableHandle);
         }
 #endif // KINECTRON_MULTI_THREAD == 0
 
         if (SUCCEEDED(hr)) {
+            m_MSHandle = reinterpret_cast<HANDLE>(m_MSWaitableHandle);
             // Set this to false to not prevent the KinectHandler::updateSensor from running
             m_IsSensorClosed = false;
             m_InitType = initeType;
@@ -171,10 +173,8 @@ void KinectHandler::reset()
 #if KINECTRON_MULTI_THREAD == 0
 void KinectHandler::update()
 {
-    HANDLE handles[] = { reinterpret_cast<HANDLE>(m_MultiSourceEvent) };
-
     // FRAME_RATE is in seconds, so multiply with 1000 to get millisecons
-    if (MsgWaitForMultipleObjects(_countof(handles), handles, false, FRAME_RATE * 1000, QS_ALLINPUT) != WAIT_OBJECT_0) {
+    if (WaitForSingleObject(m_MSHandle, FRAME_RATE * 1000) != WAIT_OBJECT_0) {
         return;
     }
 
