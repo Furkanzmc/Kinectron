@@ -6,7 +6,7 @@ class GePoTool;
 class DSwipeLeft : public DGestureBase
 {
 public:
-    DSwipeLeft(GePoTool &postureTool, const UID &customID = 0);
+    DSwipeLeft(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta) override;
 
@@ -22,7 +22,7 @@ private:
 class DSwipeRight : public DGestureBase
 {
 public:
-    DSwipeRight(GePoTool &postureTool, const UID &customID = 0);
+    DSwipeRight(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta) override;
 

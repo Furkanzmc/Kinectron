@@ -9,7 +9,7 @@ class GePoTool;
 class DBrush : public DGestureBase
 {
 public:
-    DBrush(GePoTool &postureTool, const UID &customID = 0);
+    DBrush(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta) override;
 

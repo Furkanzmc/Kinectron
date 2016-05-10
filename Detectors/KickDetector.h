@@ -6,7 +6,7 @@ class GePoTool;
 class DKickRight : public DGestureBase
 {
 public:
-    DKickRight(GePoTool &postureTool, const UID &customID = 0);
+    DKickRight(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta) override;
 
@@ -21,7 +21,7 @@ private:
 class DKickLeft : public DGestureBase
 {
 public:
-    DKickLeft(GePoTool &postureTool, const UID &customID = 0);
+    DKickLeft(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta) override;
 

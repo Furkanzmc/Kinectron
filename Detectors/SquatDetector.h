@@ -6,7 +6,7 @@ class GePoTool;
 class DSquat : public DGestureBase
 {
 public:
-    DSquat(GePoTool &postureTool, const UID &customID = 0);
+    DSquat(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
     UID detect(IBody *body, const float &delta) override;
 
 private:

@@ -6,7 +6,7 @@ class GePoTool;
 class DOpenArmLeft : public DGestureBase
 {
 public:
-    DOpenArmLeft(GePoTool &postureTool, const UID &customID = 0);
+    DOpenArmLeft(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta = 0);
     UID detectOpenRightArm(IBody *body, const float &delta = 0);
@@ -24,7 +24,7 @@ private:
 class DOpenArmRight : public DGestureBase
 {
 public:
-    DOpenArmRight(GePoTool &postureTool, const UID &customID = 0);
+    DOpenArmRight(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta = 0);
 
@@ -41,7 +41,7 @@ private:
 class DOpenArms : public DGestureBase
 {
 public:
-    DOpenArms(GePoTool &postureTool, const UID &customID = 0);
+    DOpenArms(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta = 0);
 

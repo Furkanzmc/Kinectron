@@ -24,7 +24,7 @@ public:
 class DArmWaveLeft : public DGestureBase
 {
 public:
-    DArmWaveLeft(GePoTool &postureTool, const UID &customID = 0);
+    DArmWaveLeft(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta) override;
 
@@ -38,7 +38,7 @@ private:
 class DArmWaveRight : public DGestureBase
 {
 public:
-    DArmWaveRight(GePoTool &postureTool, const UID &customID = 0);
+    DArmWaveRight(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta) override;
 

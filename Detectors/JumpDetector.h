@@ -6,7 +6,7 @@ class GePoTool;
 class DJump : public DGestureBase
 {
 public:
-    DJump(GePoTool &postureTool, const UID &customID = 0);
+    DJump(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta) override;
 

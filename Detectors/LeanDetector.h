@@ -6,7 +6,7 @@ class GePoTool;
 class DLeanLeft : public DGestureBase
 {
 public:
-    DLeanLeft(GePoTool &postureTool, const UID &customID = 0);
+    DLeanLeft(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta = 0) override;
 
@@ -17,7 +17,7 @@ private:
 class DLeanRight : public DGestureBase
 {
 public:
-    DLeanRight(GePoTool &postureTool, const UID &customID = 0);
+    DLeanRight(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta = 0) override;
 

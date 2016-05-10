@@ -1,5 +1,6 @@
 #include "KickDetector.h"
 #include "GePoTool.h"
+#include <iostream>
 
 DKickRight::DKickRight(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DKickRight", customID)

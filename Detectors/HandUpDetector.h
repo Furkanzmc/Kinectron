@@ -6,7 +6,7 @@ class GePoTool;
 class DHandUpLeft : public DGestureBase
 {
 public:
-    DHandUpLeft(GePoTool &postureTool, const UID &customID = 0);
+    DHandUpLeft(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta = 0) override;
 
@@ -17,7 +17,7 @@ private:
 class DHandUpRight : public DGestureBase
 {
 public:
-    DHandUpRight(GePoTool &postureTool, const UID &customID = 0);
+    DHandUpRight(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta = 0) override;
 

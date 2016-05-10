@@ -31,7 +31,7 @@ public:
 class DHandZoomIn : public DGestureBase
 {
 public:
-    DHandZoomIn(GePoTool &postureTool, const UID &customID = 0);
+    DHandZoomIn(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
     UID detect(IBody *body, const float &delta) override;
 
 private:
@@ -45,7 +45,7 @@ private:
 class DHandZoomOut : public DGestureBase
 {
 public:
-    DHandZoomOut(GePoTool &postureTool, const UID &customID = 0);
+    DHandZoomOut(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
     UID detect(IBody *body, const float &delta) override;
 
 private:
@@ -59,7 +59,7 @@ private:
 class DHandPinchZoomOut : public DGestureBase
 {
 public:
-    DHandPinchZoomOut(GePoTool &postureTool, const UID &customID = 0);
+    DHandPinchZoomOut(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
     UID detect(IBody *body, const float &delta) override;
 
 private:
@@ -73,7 +73,7 @@ private:
 class DHandPinchZoomIn : public DGestureBase
 {
 public:
-    DHandPinchZoomIn(GePoTool &postureTool, const UID &customID = 0);
+    DHandPinchZoomIn(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
     UID detect(IBody *body, const float &delta) override;
 
 private:

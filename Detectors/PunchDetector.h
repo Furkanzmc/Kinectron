@@ -6,7 +6,7 @@ class GePoTool;
 class DPunchRight : public DGestureBase
 {
 public:
-    DPunchRight(GePoTool &postureTool, const UID &customID = 0);
+    DPunchRight(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta) override;
     UID detectLeftPunch(IBody *body, const float &delta);
@@ -22,7 +22,7 @@ private:
 class DPunchLeft : public DGestureBase
 {
 public:
-    DPunchLeft(GePoTool &postureTool, const UID &customID = 0);
+    DPunchLeft(GePoTool &postureTool, const UID &customID = DGestureBase::INVALID_TAG);
 
     UID detect(IBody *body, const float &delta) override;
 
