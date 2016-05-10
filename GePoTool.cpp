@@ -125,22 +125,13 @@ bool GePoTool::removeDetector(DGestureBase *detector)
         return false;
     }
 
-    int indexToRemove = -1;
-    for (unsigned int i = 0; i < m_Detectors.size(); i++) {
-        if (m_Detectors.at(i)->getUniqueID() == detector->getUniqueID()) {
-            indexToRemove = i;
-            break;
-        }
-    }
+    std::remove_if(m_Detectors.begin(), m_Detectors.end(), [detector](const DGestureBase * d) {
+        return d->getUniqueID() == detector->getUniqueID();
+    });
 
-    if (indexToRemove > -1) {
-        m_Detectors.erase(m_Detectors.begin() + indexToRemove);
-        delete detector;
-        detector = nullptr;
-        return true;
-    }
-
-    return false;
+    delete detector;
+    detector = nullptr;
+    return true;
 }
 
 KinectHandler &GePoTool::getKinectHandler()
