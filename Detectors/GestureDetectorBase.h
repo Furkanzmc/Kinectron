@@ -6,7 +6,7 @@ using UID = int;//Short for Unique ID
 
 /**
  * @brief The DGestureBase class
- * When naming the classes that inherit DGestureBase, put a "D" suffix to indicate that the class is a Detector7
+ * When naming the classes that inherit DGestureBase, put a "D" suffix to indicate that the class is a Detector
  */
 class DGestureBase
 {
