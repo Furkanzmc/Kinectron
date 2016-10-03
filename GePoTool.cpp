@@ -285,8 +285,12 @@ std::vector<UID> GePoTool::pollGestures(const BodyIndex &bodyIndex, const float 
                 continue;
             }
 
-            const UID &uid = detector->detect(body, delta);
+            const UID uid = detector->detect(body, delta);
             if (uid == detector->getID()) {
+                if (detector->onDetected) {
+                    detector->onDetected(detector->getBodyIndex());
+                }
+
                 detectedGestures.push_back(uid);
             }
         }
@@ -318,8 +322,12 @@ UID GePoTool::determinePlayerPosture(const BodyIndex &bodyIndex, const float &de
                 continue;
             }
 
-            const UID &uid = detector->detect(body, delta);
+            const UID uid = detector->detect(body, delta);
             if (uid == detector->getID()) {
+                if (detector->onDetected) {
+                    detector->onDetected(detector->getBodyIndex());
+                }
+
                 detectedGesture = uid;
                 break;
             }

@@ -242,6 +242,7 @@ public:
             m_Detectors.push_back(detector);
             return detector;
         }
+
         return nullptr;
     }
 

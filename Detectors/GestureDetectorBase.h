@@ -1,7 +1,10 @@
 #ifndef GESTUREDETECTORBASE
 #define GESTUREDETECTORBASE
+// Kinect
 #include "Kinect.h"
+// STD
 #include <string>
+#include <functional>
 using UID = int;//Short for Unique ID
 
 /**
@@ -18,6 +21,8 @@ public:
 
     static const int INVALID_BODY_INDEX = -1;
     static const int INVALID_TAG = -1;
+
+    std::function<void(const unsigned int &)> onDetected;
 
 public:
     const UID &getUniqueID() const
@@ -107,4 +112,3 @@ private:
 };
 
 #endif // GESTUREDETECTORBASE
-
