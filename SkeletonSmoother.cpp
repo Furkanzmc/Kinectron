@@ -2,8 +2,8 @@
 // Local
 #include "GePoTool.h"
 #include "KinectHandler.h"
-// STD
-#include <iostream>
+// Submodules
+#include "Ceset.h"
 
 SkeletonSmoother::SkeletonSmoother(ICoordinateMapper *coordinateMapper)
     : m_CoordinateMapper(coordinateMapper)
@@ -30,7 +30,7 @@ SkeletonSmoother::SkeletonSmoother(GePoTool *postureTool)
 void SkeletonSmoother::update(const float &delta)
 {
     if (!m_PostureTool) {
-        std::cerr << "WARNING: " << __FUNCTION__ << ": m_PostureTool is nullptr. Try using SkeletonSmoother::updateJointPositions.\n";
+        LOG_WARNING("m_PostureTool is nullptr. Try using SkeletonSmoother::updateJointPositions.");
         return;
     }
 

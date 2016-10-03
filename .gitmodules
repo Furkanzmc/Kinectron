@@ -1,0 +1,4 @@
+[submodule "Ceset"]
+	path = Ceset
+	url = https://Furkanzmc@bitbucket.org/Furkanzmc/ceset.git
+	branch = develop

@@ -53,7 +53,10 @@ set(KINECTRON_INC
     ${KINECTRON_ROOT}/Detectors
     CACHE LIST "Set the list of include paths for Kinectron")
 
-include_directories(${KINECTRON_INC})
+include_directories(
+    ${KINECTRON_INC}
+    Ceset
+)
 
 if(KINECT_ENABLED)
   set(KINECTRON_SRC
