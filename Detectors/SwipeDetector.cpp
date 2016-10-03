@@ -1,4 +1,5 @@
 #include "SwipeDetector.h"
+// Local
 #include "GePoTool.h"
 
 DSwipeLeft::DSwipeLeft(GePoTool &postureTool, const UID &customID)

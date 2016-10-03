@@ -1,6 +1,7 @@
-#ifndef KINECTHANDLER_H
-#define KINECTHANDLER_H
+#pragma once
+// Local
 #include "KinectronTypes.h"
+// STD
 #include <map>
 
 class KinectHandler
@@ -81,7 +82,7 @@ public:
 
 #if KINECTRON_SINGLE_THREAD
     void update();
-#endif // #if KINECTRON_SINGLE_THREAD
+#endif // KINECTRON_SINGLE_THREAD
 
     /**
      * @brief Calls the onTakeScreenshot function in a different thread with the given file path
@@ -302,5 +303,3 @@ private:
     HRESULT updateBodyFrame();
     HRESULT updateIRFrameData();
 };
-
-#endif // KINECTHANDLER_H

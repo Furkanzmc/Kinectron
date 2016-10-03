@@ -1,4 +1,5 @@
 #include "ArmWaveDetector.h"
+// Local
 #include "GePoTool.h"
 
 UID ArmWaveDetectorHelper::detectArmWaveGesture(IBody *body, const GESTURE_SIDE &gestureSide, ArmWaveInfo &waveInfo, const float &delta, const UID &uid)
@@ -24,17 +25,20 @@ UID ArmWaveDetectorHelper::detectArmWaveGesture(IBody *body, const GESTURE_SIDE 
         const CameraSpacePoint headPos = joints[JointType_Head].Position;
         const CameraSpacePoint spineBasePos = joints[JointType_SpineBase].Position;
         const CameraSpacePoint shoulderPos = gestureSide == GESTURE_SIDE::RIGHT ? joints[JointType_ShoulderRight].Position : joints[JointType_ShoulderLeft].Position;
+
         //If the hand is below the shoulder or the hip, return false
         if (handPos.Y < shoulderPos.Y || handPos.Y < spineBasePos.Y) {
             resetInfo(waveInfo);
             return GePoTool::INVALID_UID;
         }
+
         //If the hand is on the left side of the elbow before the hand is over the shoulder, return false
         const bool isHandExceedElbow = gestureSide == GESTURE_SIDE::RIGHT ? handPos.X < elbowPos.X : handPos.X > elbowPos.X;
         if (isHandExceedElbow && waveInfo.isHandAboveShoulder == false) {
             resetInfo(waveInfo);
             return GePoTool::INVALID_UID;
         }
+
         //If the hand is over the shoulder, start scanning for the gesture
         if (handPos.Y >= shoulderPos.Y && waveInfo.isGestureDone == false) {
             waveInfo.isHandAboveShoulder = true;
@@ -51,6 +55,7 @@ UID ArmWaveDetectorHelper::detectArmWaveGesture(IBody *body, const GESTURE_SIDE 
             else {
                 waveInfo.isHandAboveHead = false;
             }
+
             //If the elbow is over the shoulder and the hand is above the head, check for the gesture successs
             if (waveInfo.isElbowAboveShoulder && waveInfo.isHandAboveHead) {
                 if (waveInfo.timeAccumulator >= waveInfo.minimalTime && waveInfo.timeAccumulator <= waveInfo.maximumTime) {
@@ -66,6 +71,7 @@ UID ArmWaveDetectorHelper::detectArmWaveGesture(IBody *body, const GESTURE_SIDE 
                 }
             }
         }
+
         //If the gesture is done, wait for the hand to return below shoulder o start scanning again
         if (waveInfo.isGestureDone) {
             waveInfo.timeAccumulator += delta;
@@ -109,4 +115,3 @@ UID DArmWaveRight::detect(IBody *body, const float &delta)
 {
     return ArmWaveDetectorHelper::detectArmWaveGesture(body, GESTURE_SIDE::RIGHT, m_ArmWaveInfo, delta, getID());
 }
-

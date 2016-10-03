@@ -1,5 +1,7 @@
 #include "GePoTool.h"
+// Local
 #include "KinectHandler.h"
+// STD
 #include <string>
 
 GePoTool::GePoTool(const unsigned int &sensorIniteType)

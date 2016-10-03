@@ -1,5 +1,4 @@
-#ifndef JUMPDETECTOR_H
-#define JUMPDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -12,9 +11,8 @@ public:
 
 private:
     GePoTool &m_PostureTool;
+
     //Jump related
     float m_TimeAccumulatorJump;
     bool m_DidJump;
 };
-
-#endif // JUMPDETECTOR_H

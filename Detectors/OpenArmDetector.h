@@ -1,5 +1,4 @@
-#ifndef OPENARMDETECTOR_H
-#define OPENARMDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -13,8 +12,9 @@ public:
 
 private:
     GePoTool &m_PostureTool;
-    float m_Duration;
     const float m_DurationLimit;
+    float m_Duration;
+
     bool m_IsGestureInitiated;
 
 private:
@@ -30,8 +30,9 @@ public:
 
 private:
     GePoTool &m_PostureTool;
-    float m_Duration;
     const float m_DurationLimit;
+    float m_Duration;
+
     bool m_IsGestureInitiated;
 
 private:
@@ -47,8 +48,9 @@ public:
 
 private:
     GePoTool &m_PostureTool;
-    float m_Duration;
     const float m_DurationLimit;
+    float m_Duration;
+
     bool m_IsGestureInitiated;
 
 private:
@@ -56,5 +58,3 @@ private:
     bool detectOpenLeftArm(IBody *body);
     void resetGesture();
 };
-
-#endif // OPENARMDETECTOR_H

@@ -1,5 +1,4 @@
-#ifndef ARM_WAVE_DETECTOR_H
-#define ARM_WAVE_DETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -7,9 +6,14 @@ class ArmWaveDetectorHelper
 {
 public:
     struct ArmWaveInfo {
-        float timeAccumulator = 0;
         const float minimalTime = .2f, maximumTime = .5f;
-        bool isHandAboveHead = false, isHandAboveShoulder = false, isElbowAboveShoulder = false, isElbowAboveHead = false, isGestureDone = false;
+        float timeAccumulator = 0;
+
+        bool isHandAboveHead = false,
+             isHandAboveShoulder = false,
+             isElbowAboveShoulder = false,
+             isElbowAboveHead = false,
+             isGestureDone = false;
     };
 
     enum class GESTURE_SIDE {
@@ -31,6 +35,7 @@ public:
 private:
     using ArmWaveInfo = ArmWaveDetectorHelper::ArmWaveInfo;
     using GESTURE_SIDE = ArmWaveDetectorHelper::GESTURE_SIDE;
+
     GePoTool &m_PostureTool;
     ArmWaveInfo m_ArmWaveInfo;
 };
@@ -45,8 +50,7 @@ public:
 private:
     using ArmWaveInfo = ArmWaveDetectorHelper::ArmWaveInfo;
     using GESTURE_SIDE = ArmWaveDetectorHelper::GESTURE_SIDE;
+
     GePoTool &m_PostureTool;
     ArmWaveInfo m_ArmWaveInfo;
 };
-
-#endif // ARM_WAVE_DETECTOR_H

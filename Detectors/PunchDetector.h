@@ -1,5 +1,4 @@
-#ifndef PUNCHDETECTOR_H
-#define PUNCHDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -13,6 +12,7 @@ public:
 
 private:
     GePoTool &m_PostureTool;
+
     //Punch related
     float m_TimeAccumulatorRightPunch, m_TimeAccumulatorLeftPunch;
     CameraSpacePoint m_TempPosRightPunch, m_TempPosLeftPunch;
@@ -28,9 +28,9 @@ public:
 
 private:
     GePoTool &m_PostureTool;
+
     //Punch related
     float m_TimeAccumulatorRightPunch, m_TimeAccumulatorLeftPunch;
     CameraSpacePoint m_TempPosRightPunch, m_TempPosLeftPunch;
     bool m_DidLeftPunchFront, m_DidRightPunchFront;
 };
-#endif // PUNCHDETECTOR_H

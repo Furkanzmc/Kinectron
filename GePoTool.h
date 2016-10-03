@@ -1,6 +1,7 @@
-#ifndef GEPOTOOL_H
-#define GEPOTOOL_H
+#pragma once
+// Local
 #include "GestureDetectorBase.h"
+// STD
 #include <functional>
 #include <vector>
 #include <array>
@@ -274,5 +275,3 @@ private:
     void processBodyNotificitons(const std::array<IBody *, BODY_COUNT> &bodyArray);
     void resetBodies();
 };
-
-#endif // GEPOTOOL_H

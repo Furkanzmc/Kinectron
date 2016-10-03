@@ -1,11 +1,12 @@
 #include "OpenArmDetector.h"
+// Local
 #include "GePoTool.h"
 
 DOpenArmLeft::DOpenArmLeft(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DOpenArmLeft", customID)
     , m_PostureTool(postureTool)
-    , m_Duration(0.f)
     , m_DurationLimit(.5f)
+    , m_Duration(0.f)
     , m_IsGestureInitiated(false)
 {
 
@@ -82,13 +83,13 @@ void DOpenArmLeft::resetGesture()
     m_IsGestureInitiated = false;
 }
 
-//---------------------------------
+// ---------------------------------
 
 DOpenArmRight::DOpenArmRight(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DOpenArmRight", customID)
     , m_PostureTool(postureTool)
-    , m_Duration(0.f)
     , m_DurationLimit(.5f)
+    , m_Duration(0.f)
     , m_IsGestureInitiated(false)
 {
 
@@ -165,13 +166,13 @@ void DOpenArmRight::resetGesture()
     m_IsGestureInitiated = false;
 }
 
-//---------------------------------
+// ---------------------------------
 
 DOpenArms::DOpenArms(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DOpenArms", customID)
     , m_PostureTool(postureTool)
-    , m_Duration(0.f)
     , m_DurationLimit(.5f)
+    , m_Duration(0.f)
     , m_IsGestureInitiated(false)
 {
 

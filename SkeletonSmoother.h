@@ -1,6 +1,7 @@
-#ifndef SKELETONSMOOTHER_H
-#define SKELETONSMOOTHER_H
+#pragma once
+// Kinect
 #include <Kinect.h>
+// STD
 #include <array>
 class GePoTool;
 
@@ -100,6 +101,7 @@ private:
     GePoTool *m_PostureTool;
     ICoordinateMapper *m_CoordinateMapper;
     float m_SmoothScale;
+
     PointF m_PositionScale;
     std::array<std::array<JointProp, JointType_Count>, BODY_COUNT> m_JointPositions;
     std::array<bool, BODY_COUNT> m_BodyTrackedStatuses;
@@ -112,5 +114,3 @@ private:
     inline PointF pointZero() const;
 
 };
-
-#endif // SKELETONSMOOTHER_H

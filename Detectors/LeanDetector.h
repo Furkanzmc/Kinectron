@@ -1,5 +1,4 @@
-#ifndef LEANDETECTOR_H
-#define LEANDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -24,5 +23,3 @@ public:
 private:
     GePoTool &m_PostureTool;
 };
-
-#endif // LEANDETECTOR_H

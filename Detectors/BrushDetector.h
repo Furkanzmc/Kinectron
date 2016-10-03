@@ -1,5 +1,4 @@
-#ifndef BRUSHDETECTOR_H
-#define BRUSHDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -22,5 +21,3 @@ private:
 
     BrushInfo m_BrushInfo;
 };
-
-#endif // BRUSHDETECTOR_H

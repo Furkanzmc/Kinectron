@@ -1,5 +1,4 @@
-#ifndef SWIPEDETECTOR_H
-#define SWIPEDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -12,8 +11,10 @@ public:
 
 private:
     GePoTool &m_PostureTool;
-    //--- For Swipe Gestures ---//
+
+    // --- For Swipe Gestures ---// 
     const float m_MinimalTimeForSwipe, m_MaximumTimeForSwipe;
+
     //Swipe Left
     float m_TimeAccumulatorSwipe;
     bool m_IsHandRightOnRight;
@@ -28,11 +29,11 @@ public:
 
 private:
     GePoTool &m_PostureTool;
-    //--- For Swipe Gestures ---//
+
+    // --- For Swipe Gestures ---// 
     const float m_MinimalTimeForSwipe, m_MaximumTimeForSwipe;
+
     //Swipe Right
     float m_TimeAccumulatorSwipe;
     bool m_IsHandLeftOnLeft;
 };
-
-#endif // SWIPEDETECTOR_H

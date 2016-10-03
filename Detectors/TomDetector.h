@@ -1,5 +1,4 @@
-#ifndef TOMDETECTOR_H
-#define TOMDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -13,5 +12,3 @@ public:
 private:
     GePoTool &m_PostureTool;
 };
-
-#endif // TOMDETECTOR_H

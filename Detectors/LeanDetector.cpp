@@ -1,4 +1,5 @@
 #include "LeanDetector.h"
+// Local
 #include "GePoTool.h"
 
 DLeanLeft::DLeanLeft(GePoTool &postureTool, const UID &customID)

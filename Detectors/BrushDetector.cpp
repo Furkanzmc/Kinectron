@@ -1,4 +1,5 @@
 #include "BrushDetector.h"
+// Local
 #include "GePoTool.h"
 
 DBrush::DBrush(GePoTool &postureTool, const UID &customID)
@@ -26,6 +27,7 @@ UID DBrush::detect(IBody *body, const float &delta)
         CameraSpacePoint handPosition = {0};
         const CameraSpacePoint spineShoulderPos = joints[JointType_SpineShoulder].Position;
         const CameraSpacePoint headPos = joints[JointType_Head].Position;
+
         //Set the higher hand as the active one
         if (joints[JointType_HandLeft].Position.Y > joints[JointType_HandRight].Position.Y) {
             handPosition = joints[JointType_HandLeft].Position;
@@ -33,6 +35,7 @@ UID DBrush::detect(IBody *body, const float &delta)
         else {
             handPosition = joints[JointType_HandRight].Position;
         }
+
         //If the hand is below the neck return GePoTool::INVALID_UID
         if (handPosition.Y < spineShoulderPos.Y) {
             resetInfo(brushInfo);

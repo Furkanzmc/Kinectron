@@ -1,5 +1,4 @@
-#ifndef HANDUPDETECTOR_H
-#define HANDUPDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -25,5 +24,3 @@ private:
     GePoTool &m_PostureTool;
 
 };
-
-#endif // HANDUPDETECTOR_H

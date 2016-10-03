@@ -1,5 +1,4 @@
-#ifndef HANDZOOMDETECTOR_H
-#define HANDZOOMDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -37,6 +36,7 @@ public:
 private:
     using HandZoomInfo = HandZoomHelper::HandZoomInfo;
     using ZOOM_TYPE = HandZoomHelper::ZOOM_TYPE;
+
     GePoTool &m_PostureTool;
     HandZoomInfo m_HandPinchZoomInfoPOne;
 };
@@ -51,6 +51,7 @@ public:
 private:
     using HandZoomInfo = HandZoomHelper::HandZoomInfo;
     using ZOOM_TYPE = HandZoomHelper::ZOOM_TYPE;
+
     GePoTool &m_PostureTool;
     HandZoomInfo m_HandPinchZoomInfoPOne;
 };
@@ -65,6 +66,7 @@ public:
 private:
     using HandZoomInfo = HandZoomHelper::HandZoomInfo;
     using ZOOM_TYPE = HandZoomHelper::ZOOM_TYPE;
+
     GePoTool &m_PostureTool;
     HandZoomHelper::PinchZoomInfo m_HandPinchZoomInfo;
 };
@@ -79,8 +81,7 @@ public:
 private:
     using HandZoomInfo = HandZoomHelper::HandZoomInfo;
     using ZOOM_TYPE = HandZoomHelper::ZOOM_TYPE;
+
     GePoTool &m_PostureTool;
     HandZoomHelper::PinchZoomInfo m_HandPinchZoomInfo;
 };
-
-#endif // HANDZOOMDETECTOR_H

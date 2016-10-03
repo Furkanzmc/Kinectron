@@ -1,5 +1,4 @@
-#ifndef KICKDETECTOR_H
-#define KICKDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -12,6 +11,7 @@ public:
 
 private:
     GePoTool &m_PostureTool;
+
     //Kick related
     float m_TimeAccumulatorKickLeft, m_TimeAccumulatorKickRight;
     CameraSpacePoint m_KickLeftStartPos, m_KickRightStartPos;
@@ -27,10 +27,9 @@ public:
 
 private:
     GePoTool &m_PostureTool;
+
     //Kick related
     float m_TimeAccumulatorKickLeft, m_TimeAccumulatorKickRight;
     CameraSpacePoint m_KickLeftStartPos, m_KickRightStartPos;
     bool m_DidKickLeft, m_DidKickRight;
 };
-
-#endif // KICKDETECTOR_H

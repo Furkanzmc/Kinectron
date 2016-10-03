@@ -1,5 +1,4 @@
-#ifndef SQUATDETECTOR_H
-#define SQUATDETECTOR_H
+#pragma once
 #include "GestureDetectorBase.h"
 class GePoTool;
 
@@ -12,5 +11,3 @@ public:
 private:
     GePoTool &m_PostureTool;
 };
-
-#endif // SQUATDETECTOR_H
