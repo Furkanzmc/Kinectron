@@ -55,7 +55,6 @@ set(KINECTRON_INC
 
 include_directories(
     ${KINECTRON_INC}
-    Ceset
 )
 
 if(KINECT_ENABLED)
