@@ -1,4 +1,4 @@
-#include "KinectHandler.h"
+#include "Kinectron/KinectHandler.h"
 // STD
 #include <ctime>
 #include <vector>

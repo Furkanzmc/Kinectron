@@ -1,6 +1,6 @@
-#include "HandZoomDetector.h"
+#include "Kinectron/Detectors/HandZoomDetector.h"
 // Local
-#include "GePoTool.h"
+#include "Kinectron/GePoTool.h"
 
 UID HandZoomHelper::detectHandZoom(GePoTool &postureTool, IBody *body, const ZOOM_TYPE &zoomType, HandZoomInfo &zoomInfo, const float &delta, const UID &uid)
 {

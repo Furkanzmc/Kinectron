@@ -1,6 +1,6 @@
-#include "OpenArmDetector.h"
+#include "Kinectron/Detectors/OpenArmDetector.h"
 // Local
-#include "GePoTool.h"
+#include "Kinectron/GePoTool.h"
 
 DOpenArmLeft::DOpenArmLeft(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DOpenArmLeft", customID)

@@ -1,6 +1,6 @@
-#include "LeanDetector.h"
+#include "Kinectron/Detectors/LeanDetector.h"
 // Local
-#include "GePoTool.h"
+#include "Kinectron/GePoTool.h"
 
 DLeanLeft::DLeanLeft(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DLeanLeft", customID)

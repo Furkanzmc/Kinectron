@@ -1,7 +1,7 @@
-#include "JumpDetector.h"
+#include "Kinectron/Detectors/JumpDetector.h"
 // Local
-#include "GePoTool.h"
-#include "KinectHandler.h"
+#include "Kinectron/GePoTool.h"
+#include "Kinectron/KinectHandler.h"
 
 DJump::DJump(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DJump", customID)

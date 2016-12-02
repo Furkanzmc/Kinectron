@@ -1,6 +1,6 @@
-#include "PunchDetector.h"
+#include "Kinectron/Detectors/PunchDetector.h"
 // Local
-#include "GePoTool.h"
+#include "Kinectron/GePoTool.h"
 
 DPunchRight::DPunchRight(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DPunchRight", customID)

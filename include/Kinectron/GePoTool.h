@@ -1,6 +1,6 @@
 #pragma once
 // Local
-#include "GestureDetectorBase.h"
+#include "Kinectron/Detectors/GestureDetectorBase.h"
 // STD
 #include <functional>
 #include <vector>

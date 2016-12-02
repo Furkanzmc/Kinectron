@@ -1,6 +1,6 @@
-#include "ArmWaveDetector.h"
+#include "Kinectron/Detectors/ArmWaveDetector.h"
 // Local
-#include "GePoTool.h"
+#include "Kinectron/GePoTool.h"
 
 UID ArmWaveDetectorHelper::detectArmWaveGesture(IBody *body, const GESTURE_SIDE &gestureSide, ArmWaveInfo &waveInfo, const float &delta, const UID &uid)
 {

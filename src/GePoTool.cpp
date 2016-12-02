@@ -1,6 +1,6 @@
-#include "GePoTool.h"
+#include "Kinectron/GePoTool.h"
 // Local
-#include "KinectHandler.h"
+#include "Kinectron/KinectHandler.h"
 // STD
 #include <string>
 

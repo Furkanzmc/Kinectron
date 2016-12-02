@@ -1,6 +1,6 @@
-#include "KickDetector.h"
+#include "Kinectron/Detectors/KickDetector.h"
 // Local
-#include "GePoTool.h"
+#include "Kinectron/GePoTool.h"
 
 DKickRight::DKickRight(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DKickRight", customID)

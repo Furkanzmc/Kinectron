@@ -1,6 +1,6 @@
-#include "TomDetector.h"
+#include "Kinectron/Detectors/TomDetector.h"
 // Local
-#include "GePoTool.h"
+#include "Kinectron/GePoTool.h"
 
 DTom::DTom(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DTom", customID)

@@ -1,6 +1,6 @@
-#include "SwipeDetector.h"
+#include "Kinectron/Detectors/SwipeDetector.h"
 // Local
-#include "GePoTool.h"
+#include "Kinectron/GePoTool.h"
 
 DSwipeLeft::DSwipeLeft(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DSwipeLeft", customID)

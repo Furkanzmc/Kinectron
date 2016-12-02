@@ -1,5 +1,5 @@
-#include "HandUpDetector.h"
-#include "GePoTool.h"
+#include "Kinectron/Detectors/HandUpDetector.h"
+#include "Kinectron/GePoTool.h"
 
 DHandUpLeft::DHandUpLeft(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DHandUpLeft", customID)

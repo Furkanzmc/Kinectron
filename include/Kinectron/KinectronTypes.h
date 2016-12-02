@@ -1,5 +1,4 @@
-#ifndef KINECTUTILTYPES_H
-#define KINECTUTILTYPES_H
+#pragma once
 //Windows Includes
 #include <Windows.h>
 #include <strsafe.h>
@@ -9,7 +8,7 @@
 #pragma comment(lib, "Ole32.lib")
 
 //Kinect Includes
-#include "Kinect.h"
+#include <Kinect.h>
 
 //STD includes
 #include <functional>
@@ -214,5 +213,3 @@ struct IRFrameInfo {
     // hard coded, as was done here, or calculated at runtime.
     float sceneStandardDeviations = 3.0f;
 };
-
-#endif // KINECTUTILTYPES_H

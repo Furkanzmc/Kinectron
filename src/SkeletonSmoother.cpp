@@ -1,7 +1,7 @@
-#include "SkeletonSmoother.h"
+#include "Kinectron/SkeletonSmoother.h"
 // Local
-#include "GePoTool.h"
-#include "KinectHandler.h"
+#include "Kinectron/GePoTool.h"
+#include "Kinectron/KinectHandler.h"
 // Submodules
 #include "Ceset.h"
 

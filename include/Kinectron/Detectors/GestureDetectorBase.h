@@ -1,7 +1,6 @@
-#ifndef GESTUREDETECTORBASE
-#define GESTUREDETECTORBASE
+#pragma once
 // Kinect
-#include "Kinect.h"
+#include <Kinect.h>
 // STD
 #include <string>
 #include <functional>
@@ -110,5 +109,3 @@ protected:
 private:
     DGestureBase(const DGestureBase &base) = delete;
 };
-
-#endif // GESTUREDETECTORBASE

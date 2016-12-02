@@ -1,6 +1,6 @@
-#include "BrushDetector.h"
+#include "Kinectron/Detectors/BrushDetector.h"
 // Local
-#include "GePoTool.h"
+#include "Kinectron/GePoTool.h"
 
 DBrush::DBrush(GePoTool &postureTool, const UID &customID)
     : DGestureBase(postureTool.getUID(), DETECTION_TYPE::GESTURE, "DBrush", customID)
