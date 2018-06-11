@@ -48,68 +48,71 @@ endif()
 get_filename_component(KINECTRON_ROOT "./" ABSOLUTE)
 
 set(KINECTRON_INC
-    ${KINECTRON_ROOT}
     ${KinectSDK2_INCLUDE_DIRS}
-    ${KINECTRON_ROOT}/Detectors
+    ${KINECTRON_ROOT}/include
     CACHE LIST "Set the list of include paths for Kinectron")
 
-include_directories(${KINECTRON_INC})
+include_directories(
+    ${KinectSDK2_INCLUDE_DIRS}
+    include/
+    )
 
 if(KINECT_ENABLED)
-  set(KINECTRON_SRC
-    KinectHandler.cpp
-    GePoTool.cpp
-    SkeletonSmoother.cpp
-  )
+    set(KINECTRON_SRC
+        src/KinectHandler.cpp
+        src/GePoTool.cpp
+        src/SkeletonSmoother.cpp
+        )
 
-  list(APPEND KINECTRON_HEADERS
-    KinectHandler.h
-    GePoTool.h
-    Detectors/GestureDetectorBase.h
-    SkeletonSmoother.h
-    KinectronTypes.h
-  )
+    list(APPEND KINECTRON_HEADERS
+        include/Kinectron/KinectHandler.h
+        include/Kinectron/GePoTool.h
+        include/Kinectron/Detectors/GestureDetectorBase.h
+        include/Kinectron/SkeletonSmoother.h
+        include/Kinectron/KinectronTypes.h
+        )
 
-#Append Gesture Detectors
-  list(APPEND KINECTRON_SRC
-    Detectors/LeanDetector.cpp
-    Detectors/KickDetector.cpp
-    Detectors/PunchDetector.cpp
-    Detectors/JumpDetector.cpp
-    Detectors/SwipeDetector.cpp
-    Detectors/ArmWaveDetector.cpp
-    Detectors/BrushDetector.cpp
-    Detectors/HandZoomDetector.cpp
-    Detectors/OpenArmDetector.cpp
-    Detectors/HandUpDetector.cpp
-    Detectors/TomDetector.cpp
-    Detectors/SquatDetector.cpp
-  )
+    #Append Gesture Detectors
+    list(APPEND KINECTRON_SRC
+        src/Detectors/LeanDetector.cpp
+        src/Detectors/KickDetector.cpp
+        src/Detectors/PunchDetector.cpp
+        src/Detectors/JumpDetector.cpp
+        src/Detectors/SwipeDetector.cpp
+        src/Detectors/ArmWaveDetector.cpp
+        src/Detectors/BrushDetector.cpp
+        src/Detectors/HandZoomDetector.cpp
+        src/Detectors/OpenArmDetector.cpp
+        src/Detectors/HandUpDetector.cpp
+        src/Detectors/TomDetector.cpp
+        src/Detectors/SquatDetector.cpp
+        )
 
-  list(APPEND KINECTRON_HEADERS
-    Detectors/LeanDetector.h
-    Detectors/KickDetector.h
-    Detectors/PunchDetector.h
-    Detectors/JumpDetector.h
-    Detectors/SwipeDetector.h
-    Detectors/ArmWaveDetector.h
-    Detectors/BrushDetector.h
-    Detectors/HandZoomDetector.h
-    Detectors/OpenArmDetector.h
-    Detectors/HandUpDetector.h
-    Detectors/TomDetector.h
-    Detectors/SquatDetector.h
-  )
+    list(APPEND KINECTRON_HEADERS
+        include/Kinectron/Detectors/LeanDetector.h
+        include/Kinectron/Detectors/KickDetector.h
+        include/Kinectron/Detectors/PunchDetector.h
+        include/Kinectron/Detectors/JumpDetector.h
+        include/Kinectron/Detectors/SwipeDetector.h
+        include/Kinectron/Detectors/ArmWaveDetector.h
+        include/Kinectron/Detectors/BrushDetector.h
+        include/Kinectron/Detectors/HandZoomDetector.h
+        include/Kinectron/Detectors/OpenArmDetector.h
+        include/Kinectron/Detectors/HandUpDetector.h
+        include/Kinectron/Detectors/TomDetector.h
+        include/Kinectron/Detectors/SquatDetector.h
+        )
 else()
     message("ERROR [Kinectron]: Kinect SDK cannot be found so it is not enabled.")
 endif(KINECT_ENABLED)
 
 add_library(kinectron STATIC
-  ${KINECTRON_SRC}
-)
+    ${KINECTRON_SRC}
+    ${KINECTRON_HEADERS}
+    )
 
 set_target_properties(kinectron
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-)
+    )
